@@ -4,7 +4,7 @@ function main() {
   const output = new Output(gamification, time);
   output.programs
   Logger.log('Completed')
-  //TODO разобраться с spent time когда сначала был биг ордер а потом normal
+  //TODO 
 }
 
 
@@ -15,9 +15,9 @@ class Gamification {
     this.members = this.getCalculations(this.getMembers());
     // this.teams = this.getTeams();
     this.weights = this.getWeights();
-    this.arraysForPercentile = this.getArraysForPercentile()
-    this.percentileAndPointsProcedure()
-    // this.json()
+    this.arraysForQuantile = this.getArraysForQuantile()
+    this.quantileAndPointsProcedure()
+    this.json()
   };
 
   json() {
@@ -40,22 +40,22 @@ class Gamification {
         for (const orderInstance in orders[order][fpEsx]) {
           const feedback = {}
           const row = orders[order][fpEsx][orderInstance];
-          const date = row[indexColumnDate_];
-          const orderId = row[indexColumnOrderId_];
-          const platform = row[indexColumnPlatform_];
-          const creator = row[indexColumnCreator_];
-          const creatorUid = row[indexColumnCreatorUID_]
-          const recipients = row[indexColumnRecipients_];
-          const recipientsUid = row[indexColumnRecipientsUID_];
-          const type = row[indexColumnType_];
-          const mark = row[indexColumnMark_];
-          const square = row[indexColumnSquare_];
-          const cameras = row[indexColumnCameras_];
-          const st = row[indexColumnSpentTime_];
-          const reviewST = row[indexColumnReviewSpentTime_];
+          const date = row[indexDate];
+          const orderId = row[indexOrderId];
+          const platform = row[indexPlatform];
+          const creator = row[indexCreator];
+          const creatorUid = row[indexCreatorUID]
+          const recipients = row[indexRecipients];
+          const recipientsUid = row[indexRecipientsUID];
+          const type = row[indexType];
+          const mark = row[indexMark];
+          const square = row[indexSquare];
+          const cameras = row[indexCameras];
+          const st = row[indexSpentTime];
+          const reviewST = row[indexReviewSpentTime];
           const recipientsArr = recipients ? recipients.split(',') : [];
           const recipientsArrUid = recipientsUid ? recipientsUid.split(',') : [];
-          const isConverter = row[indexColumnConverter_];
+          const isConverter = row[indexConverter];
 
           let creatorFlag = false;
           for (let indexRecipient in recipientsArrUid) {
@@ -73,7 +73,7 @@ class Gamification {
             feedback[recipientUid].orders[date] = createRecord_(date, orderId, platform, type, mark, square, cameras, st, reviewST, true, false, recipientsArrUid, isConverter);
 
           }
-          if (!creatorFlag) {
+          if (!creatorFlag && creatorUid) {
             if (!feedback[creatorUid]) {
               feedback[creatorUid] = {};
               feedback[creatorUid].orders = {};
@@ -83,9 +83,8 @@ class Gamification {
             feedback[creatorUid].orders[date] = createRecord_(date, orderId, platform, type, mark, square, cameras, st, reviewST, false, true, recipientsArrUid, isConverter);
             feedback[creatorUid].order //todo += reviewST
 
-            //todo перезаписать оценку для реципиентов
           }
-          // todo закрываем цикл с 40 строки
+
           for (let drafterUid in feedback) {
             if (!members[drafterUid]) {
               members[drafterUid] = {}
@@ -122,20 +121,23 @@ class Gamification {
                 const drafter = members[drafterUid].data[orderAsObject.type][normalBig]
 
                 if (orderAsObject.isRecipient) {
+                  if (orderAsObject.st) {
 
-                  drafter[converterType].time += Number(orderAsObject.st);
-                  drafter[converterType].cameras += Number(orderAsObject.cameras);
-                  orderAsObject.recipientArray.length < 2 ? drafter[converterType].ordersSolo++ : drafter[converterType].ordersShared++;
-                  drafter[converterType].square += Formulas.getRounding(orderAsObject.square);
-                  drafter[converterType].markArray.push(Number(orderAsObject.mark));
-
+                    drafter[converterType].time += Number(orderAsObject.st);
+                    drafter[converterType].cameras += Number(orderAsObject.cameras);
+                    orderAsObject.recipientArray.length < 2 ? drafter[converterType].ordersSolo++ : drafter[converterType].ordersShared++;
+                    drafter[converterType].square += Formulas.getRounding(orderAsObject.square);
+                    drafter[converterType].markArray.push(Number(orderAsObject.mark));
+                  }
                 }
                 else if (orderAsObject.isCreator && !orderAsObject.isRecipient) {
                   converterType = 'review'
+                  if (orderAsObject.reviewST) {
 
-                  drafter[converterType].time += Number(orderAsObject.reviewST);
-                  drafter[converterType].ordersTotal++;
-                  drafter[converterType].cameras += Number(orderAsObject.cameras);
+                    drafter[converterType].time += Number(orderAsObject.reviewST);
+                    drafter[converterType].ordersTotal++;
+                    drafter[converterType].cameras += Number(orderAsObject.cameras);
+                  }
                 }
                 else {
                   throw new Error('!isRecipient && !isCreator')
@@ -158,8 +160,8 @@ class Gamification {
   getCalculations(members) {
 
     for (const drafterUid of Object.values(members)) {
-      for (const fpEsx of PROGRAMS_SHEET.fpOrEsxKeysList) {
-        for (const normalBig of PROGRAMS_SHEET.normalBigKeysList) {
+      for (const fpEsx of TYPES_OF_ORDERS.fpOrEsxKeysList) {
+        for (const normalBig of TYPES_OF_ORDERS.normalBigKeysList) {
 
           const program = drafterUid.data[fpEsx][normalBig];
           drafterUid.dateStart = new Date(this.orders.at(0)).getTime()
@@ -245,21 +247,21 @@ class Gamification {
     return teams
   };
 
-  getArraysForPercentile() {
+  getArraysForQuantile() {
     const array = typeFactory()
 
-    function draw(programData, percentileCategory, converterType) {
-      percentileCategory.orders.push(programData[converterType].ordersTotal)
-      percentileCategory.cameras.push(programData[converterType].cameras)
-      percentileCategory.mark.push(programData[converterType].markAverage)
-      percentileCategory.soloPercent.push(programData[converterType].soloPercent)
-      percentileCategory.speed.push(programData[converterType].speed)
+    function draw(programData, quantileCategory, converterType) {
+      quantileCategory.orders.push(programData[converterType].ordersTotal)
+      quantileCategory.cameras.push(programData[converterType].cameras)
+      quantileCategory.mark.push(programData[converterType].markAverage)
+      quantileCategory.soloPercent.push(programData[converterType].soloPercent)
+      quantileCategory.speed.push(programData[converterType].speed)
     }
 
-    function review(programData, percentileCategory) {
-      percentileCategory.orders.push(programData.ordersTotal)
-      percentileCategory.cameras.push(programData.cameras)
-      percentileCategory.speed.push(programData.speed)
+    function review(programData, quantileCategory) {
+      quantileCategory.orders.push(programData.ordersTotal)
+      quantileCategory.cameras.push(programData.cameras)
+      quantileCategory.speed.push(programData.speed)
     }
 
     for (const drafterUid of Object.values(this.members)) {
@@ -343,85 +345,86 @@ class Gamification {
   }
 
 
-  percentileAndPointsProcedure() {
+  quantileAndPointsProcedure() {
     const weights = this.weights
+
     for (const drafterUid of Object.values(this.members)) {
+      for (const fpEsx of TYPES_OF_ORDERS.fpOrEsxKeysList) {
+        for (const normalBig of TYPES_OF_ORDERS.normalBigKeysList) {
 
-      for (const fpOrEsx of PROGRAMS_SHEET.fpOrEsxKeysList) {
-        for (const normalBig of PROGRAMS_SHEET.normalBigKeysList) {
+          let program = drafterUid.data[fpEsx][normalBig]
 
-          let program = drafterUid.data[fpOrEsx][normalBig]
-          for (let type of Object.keys(this.arraysForPercentile)) {
-            let typeObj = this.arraysForPercentile[type]
+          for (let drawReview of Object.keys(this.arraysForQuantile)) {
+            let drawReviewObj = this.arraysForQuantile[drawReview]
             let converterType
 
-            if (fpOrEsx === 'DRAWING' && normalBig === 'NORMAL') {
+            if (fpEsx === 'DRAWING' && normalBig === 'NORMAL') {
               let group = 'fp_normal_noConv'
 
-              switch (type) {
+              switch (drawReview) {
                 case 'draw':
                   converterType = 'noConverter'
-                  this.getPercentileAndPoints(program, converterType, typeObj, weights, type, group)
+                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
                   break;
 
                 case 'review':
                   converterType = 'review'
-                  this.getPercentileAndPoints(program, converterType, typeObj, weights, type, group)
+                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
                   break;
                 default:
                   'Choose correct type'
                   break;
               }
             }
-            else if (fpOrEsx === 'DRAWING' && normalBig === 'BIG') {
+            if (fpEsx === 'DRAWING' && normalBig === 'BIG') {
               let group = 'fp_big_noConv'
 
-              switch (type) {
+              switch (drawReview) {
                 case 'draw':
                   converterType = 'noConverter'
-                  this.getPercentileAndPoints(program, converterType, typeObj, weights, type, group)
+                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
                   break;
 
                 case 'review':
                   converterType = 'review'
-                  this.getPercentileAndPoints(program, converterType, typeObj, weights, type, group)
+                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
                   break;
                 default:
                   'Choose correct type'
                   break;
               }
             }
-            else if (fpOrEsx === 'DRAWING_ESX' && normalBig === 'NORMAL') {
+            if (fpEsx === 'DRAWING_ESX' && normalBig === 'NORMAL') {
               let group = 'esx_normal_conv'
               let groupNoConv = 'esx_normal_noConv'
 
-              switch (type) {
+              switch (drawReview) {
                 case 'draw':
                   converterType = 'noConverter'
-                  this.getPercentileAndPoints(program, converterType, typeObj, weights, type, groupNoConv)
-                  this.getPercentileAndPoints(program, 'converter', typeObj, weights, type, group)
+                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, groupNoConv)
+                  this.getQuantileAndPlace(program, 'converter', drawReviewObj, weights, drawReview, group)
                   break;
 
                 case 'review':
                   converterType = 'review'
-                  this.getPercentileAndPoints(program, converterType, typeObj, weights, type, group)
+                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
                   break;
                 default:
                   'Choose correct type'
                   break;
               }
             }
-            else if (fpOrEsx === 'DRAWING_ESX' && normalBig === 'BIG') {
+            if (fpEsx === 'DRAWING_ESX' && normalBig === 'BIG') {
               let group = 'esx_big_conv'
-              switch (type) {
+              switch (drawReview) {
                 case 'draw':
                   converterType = 'converter'
-                  this.getPercentileAndPoints(program, converterType, typeObj, weights, type, group)
+                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
                   break;
 
                 case 'review':
                   converterType = 'review'
-                  this.getPercentileAndPoints(program, converterType, typeObj, weights, type, group)
+                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
                   break;
                 default:
                   'Choose correct type'
@@ -433,106 +436,80 @@ class Gamification {
       }
     }
   }
-  getPercentileAndPoints(program, converterType, typeObj, weights, type, group) {
+
+  getQuantileAndPlace(program, converterType, typeObj, weights, type, group) {
 
     let markPoints = 0
     let soloPercentPoints = 0
 
-    program[converterType].ordersPercentile = Formulas.getPercentile(typeObj[group].orders, program[converterType].ordersTotal, 'orders')
-
-    program[converterType].camerasPercentile = Formulas.getPercentile(typeObj[group].cameras, program[converterType].cameras, 'cameras')
-
-    program[converterType].speedPercentile = Formulas.getPercentile(typeObj[group].speed, program.noConverter.speed, 'speed', program[converterType].ordersPercentile)
-
-    if (type === 'draw') {
-      program[converterType].markPercentile = Formulas.getPercentile(typeObj[group].mark, program[converterType].markAverage, 'mark')
-
-      program[converterType].soloPercentPercentile = Formulas.getPercentile(typeObj[group].soloPercent, program[converterType].soloPercent, 'soloPercent', program[converterType].ordersPercentile)
-
-      const { place: mPlace, places: mPlaces } = Formulas.getPlace(typeObj[group].mark, program[converterType].markAverage)
-      program[converterType].markAveragePlace = mPlace
-      program[converterType].markAveragePlaces = mPlaces
-
-      const { place: sPlace, places: sPlaces } = Formulas.getPlace(typeObj[group].soloPercent, program[converterType].soloPercent)
-      program[converterType].soloPercentPlace = sPlace
-      program[converterType].soloPercentPlaces = sPlaces
-
-      let markPercentile = program[converterType].markPercentile
-      let soloPercentPercentile = program[converterType].soloPercentPercentile
-
-      let markWeight = weights[type][group].mark
-      let soloPercentWeight = weights[type][group].solo
-
-      program[converterType].markPoints = markPercentile * markWeight
-      program[converterType].soloPercentPoints = soloPercentPercentile * soloPercentWeight
-
-      markPoints = program[converterType].markPoints
-      soloPercentPoints = program[converterType].soloPercentPoints
-
-    }
-
-    const { place: oPlace, places: oPlaces } = Formulas.getPlace(typeObj[group].orders, program[converterType].ordersTotal)
+    //Orders
+    const { place: oPlace, places: oPlaces, quantile: oQuantile } = Formulas.getPlace(typeObj[group].orders, program[converterType].ordersTotal)
     program[converterType].ordersPlace = oPlace
     program[converterType].ordersPlaces = oPlaces
+    program[converterType].ordersQuantile = oQuantile
 
-    const { place: cPlace, places: cPlaces } = Formulas.getPlace(typeObj[group].cameras, program[converterType].cameras)
-    program[converterType].camerasPlace = cPlace
-    program[converterType].camerasPlaces = cPlaces
-
-    const { place: spPlace, places: spPlaces } = Formulas.getPlace(typeObj[group].speed, program[converterType].speed, 'speed')
-    program[converterType].speedPlace = spPlace
-    program[converterType].speedPlaces = spPlaces
-
-    let ordersPercentile = program[converterType].ordersPercentile
-    let camerasPercentile = program[converterType].camerasPercentile
-    let speedPercentile = program[converterType].speedPercentile
-
+    let ordersQuantile = program[converterType].ordersQuantile
     let ordersWeight = weights[type][group].orders
-    let camerasWeight = weights[type][group].cameras
-    let speedWeight = weights[type][group].speed
-
-    program[converterType].ordersPoints = ordersPercentile * ordersWeight
-    program[converterType].camerasPoints = camerasPercentile * camerasWeight
-    program[converterType].speedPoints = speedPercentile * speedWeight
-
+    program[converterType].ordersPoints = ordersQuantile * ordersWeight
     let ordersPoints = program[converterType].ordersPoints
-    let camerasPoints = program[converterType].camerasPoints
-    let speedPoints = program[converterType].speedPoints
 
-    program[converterType].totalPoints = ordersPoints + camerasPoints + markPoints + soloPercentPoints + speedPoints
+    if (ordersQuantile) {
+      if (type === 'draw') {
+        const { place: mPlace, places: mPlaces, quantile: mQuantile } = Formulas.getPlace(typeObj[group].mark, program[converterType].markAverage)
+        program[converterType].markAveragePlace = mPlace
+        program[converterType].markAveragePlaces = mPlaces
+        program[converterType].markQuantile = mQuantile
 
+        const { place: spPlace, places: spPlaces, quantile: spQuantile } = Formulas.getPlace(typeObj[group].soloPercent, program[converterType].soloPercent)
+        program[converterType].soloPercentPlace = spPlace
+        program[converterType].soloPercentPlaces = spPlaces
+        program[converterType].soloPercentQuantile = spQuantile
+
+        let markQuantile = program[converterType].markQuantile
+        let soloPercentQuantile = program[converterType].soloPercentQuantile
+
+        let markWeight = weights[type][group].mark
+        let soloPercentWeight = weights[type][group].solo
+
+        program[converterType].markPoints = markQuantile * markWeight
+        program[converterType].soloPercentPoints = soloPercentQuantile * soloPercentWeight
+
+        markPoints = program[converterType].markPoints
+        soloPercentPoints = program[converterType].soloPercentPoints
+
+      }
+
+      const { place: cPlace, places: cPlaces, quantile: cQuantile } = Formulas.getPlace(typeObj[group].cameras, program[converterType].cameras)
+      program[converterType].camerasPlace = cPlace
+      program[converterType].camerasPlaces = cPlaces
+      program[converterType].camerasQuantile = cQuantile
+
+      const { place: sPlace, places: sPlaces, quantile: sQuantile } = Formulas.getPlace(typeObj[group].speed, program[converterType].speed, 'speed')
+      program[converterType].speedPlace = sPlace
+      program[converterType].speedPlaces = sPlaces
+      program[converterType].speedQuantile = sQuantile
+
+      let camerasQuantile = program[converterType].camerasQuantile
+      let speedQuantile = program[converterType].speedQuantile
+
+      let camerasWeight = weights[type][group].cameras
+      let speedWeight = weights[type][group].speed
+
+      program[converterType].camerasPoints = camerasQuantile * camerasWeight
+      program[converterType].speedPoints = speedQuantile * speedWeight
+
+      let camerasPoints = program[converterType].camerasPoints
+      let speedPoints = program[converterType].speedPoints
+
+      program[converterType].totalPoints = ordersPoints + camerasPoints + markPoints + soloPercentPoints + speedPoints
+
+    }
   }
 }
 
 
 
 
-const typeFactory = () => {
-  const groupFactory = () => {
-    return {
-      orders: [],
-      cameras: [],
-      mark: [],
-      soloPercent: [],
-      speed: [],
-    }
-  }
-  return {
-    draw: {
-      fp_normal_noConv: groupFactory(),
-      fp_big_noConv: groupFactory(),
-      esx_normal_conv: groupFactory(),
-      esx_big_conv: groupFactory(),
-      esx_normal_noConv: groupFactory(),
-    },
-    review: {
-      fp_normal_noConv: groupFactory(),
-      fp_big_noConv: groupFactory(),
-      esx_normal_conv: groupFactory(),
-      esx_big_conv: groupFactory(),
-    }
-  }
-}
 
 class Output {
   constructor(gamification, time) {
@@ -545,10 +522,10 @@ class Output {
     const drawSheet = SS.getSheetByName('draw')
     const reviewSheet = SS.getSheetByName('review')
     let drawOutput = [[
-      'uid', 'date', 'type', 'orders', 'cameras', 'mark_avg', 'solo_orders', 'spent_time', 'solo_percent', 'speed', 'orders_percentile', 'cameras_percentile', 'mark_percentile', 'solo_percent_percentile', 'speed_percentile', 'orders_points', 'cameras_points', 'mark_points', 'solo_percent_points', 'speed_points', 'total_points',
+      'uid', 'date', 'type', 'orders', 'cameras', 'mark_avg', 'solo_orders', 'spent_time', 'solo_percent', 'speed', 'orders_quantile', 'cameras_quantile', 'mark_quantile', 'solo_percent_quantile', 'speed_quantile', 'orders_points', 'cameras_points', 'mark_points', 'solo_percent_points', 'speed_points', 'total_points',
     ]]
     let reviewOutput = [[
-      'uid', 'date', 'type', 'orders', 'cameras', 'spent_time', 'speed', 'orders_percentile', 'cameras_percentile', 'speed_percentile', 'orders_points', 'cameras_points', 'speed_points', 'total_points',
+      'uid', 'date', 'type', 'orders', 'cameras', 'spent_time', 'speed', 'orders_quantile', 'cameras_quantile', 'speed_quantile', 'orders_points', 'cameras_points', 'speed_points', 'total_points',
     ]]
 
     // VALUES
@@ -594,182 +571,4 @@ class Member {
     this[TYPES_OF_ORDERS.fp] = factoryNormalBig();
     this[TYPES_OF_ORDERS.esx] = factoryNormalBig();
   };
-};
-
-// FACTORIES
-
-const factoryReview = () => {
-  return {
-    time: 0,
-
-    ordersTotal: 0,
-    ordersPercentile: 0,
-    ordersPoints: 0,
-    ordersArray: [],
-    ordersPlace: 0,
-    ordersPlaces: 0,
-
-    cameras: 0,
-    camerasPercentile: 0,
-    camerasPoints: 0,
-    camerasPlace: 0,
-    camerasPlaces: 0,
-
-    speed: 0,
-    speedPercentile: 0,
-    speedPoints: 0,
-    speedPlace: 0,
-    speedPlaces: 0,
-  };
-};
-
-const factoryNormalBig = () => {
-  const factoryFields = () => {
-    const factoryConverterType = () => {
-      return {
-        time: 0,
-        square: 0,
-
-        ordersSolo: 0,
-        ordersShared: 0,
-        ordersTotal: 0,
-        ordersPercentile: 0,
-        ordersPoints: 0,
-        ordersArray: [],
-        ordersPlace: 0,
-        ordersPlaces: 0,
-
-        cameras: 0,
-        camerasPercentile: 0,
-        camerasPoints: 0,
-        camerasPlace: 0,
-        camerasPlaces: 0,
-
-        markArray: [],
-        markAverage: 0,
-        markPercentile: 0,
-        markPoints: 0,
-        markAveragePlace: 0,
-        markAveragePlaces: 0,
-
-        soloPercent: 0,
-        soloPercentPercentile: 0,
-        soloPercentPoints: 0,
-        soloPercentPlace: 0,
-        soloPercentPlaces: 0,
-
-        speed: 0,
-        speedPercentile: 0,
-        speedPoints: 0,
-        speedPlace: 0,
-        speedPlaces: 0,
-
-      };
-    };
-
-    return {
-      converter: factoryConverterType(),
-      noConverter: factoryConverterType(),
-      review: factoryReview(),
-
-      points: 0,
-      reviewPoints: 0,
-    };
-  };
-
-  return {
-    [TYPES_OF_ORDERS.normal]: factoryFields(),
-    [TYPES_OF_ORDERS.big]: factoryFields(),
-  };
-};
-
-const factoryPointsFpOrEsx = () => {
-  const factoryPointsNormalBig = () => {
-    return {
-      drawing: 0,
-      review: 0,
-    };
-  };
-  return {
-    fp: factoryPointsNormalBig(),
-    esx: factoryPointsNormalBig()
-  };
-};
-
-const reviewOutputFactory = (uid, date, type, program) => {
-  return {
-    'uid': uid,
-    'date': date,
-    'type': type,
-    'orders': program.review.ordersTotal || '',
-    'cameras': program.review.cameras || '',
-    "review_st": program.review.time || '',
-    'review_speed': program.review.speed || '',
-
-    'orders_percentile': program.review.ordersPercentile || '',
-    'cameras_percentile': program.review.camerasPercentile || '',
-    'speed_percentile': program.review.speedPercentile || '',
-
-    'order_points': program.review.ordersPoints || '',
-    'cameras_points': program.review.camerasPoints || '',
-    'speed_points': program.review.speedPoints || '',
-
-    'total_points': program.review.totalPoints || '',
-    // 'orders_array': program.review.ordersArray.join(', '),
-  };
-};
-
-const drawOutputFactory = (uid, date, type, program, converterType) => {
-  return {
-    'uid': uid,
-    'date': date,
-    'type': type,
-    'orders': program[converterType].ordersTotal || '',
-    'cameras': program[converterType].cameras || '',
-    'mark_avg': program[converterType].markAverage || '',
-    'solo_orders': program[converterType].ordersSolo || '',
-    "spent_time": program[converterType].time || '',
-    'solo_percent': program[converterType].soloPercent || '',
-    'speed': program[converterType].speed || '',
-
-    'orders_percentile': program[converterType].ordersPercentile || '',
-    'cameras_percentile': program[converterType].camerasPercentile || '',
-    'mark_percentile': program[converterType].markPercentile || '',
-    'solo_percent_percentile': program[converterType].soloPercentPercentile || '',
-    'speed_percentile': program[converterType].speedPercentile || '',
-
-    'orders_points': program[converterType].ordersPoints || '',
-    'cameras_points': program[converterType].camerasPoints || '',
-    'mark_points': program[converterType].markPoints || '',
-    'solo_percent_points': program[converterType].soloPercentPoints || '',
-    'speed_points': program[converterType].speedPoints || '',
-
-    'total_points': program[converterType].totalPoints || '',
-    // 'orders_array': program[converterType].ordersArray.join(', '),
-  };
-};
-
-// Misc functions 
-
-const getExcludedZeros = (array) => {
-  const newArray = array.map(value => value === 0 ? '' : value)
-  return newArray
-};
-
-function findDuplicates(array) {
-  const duplicates = [];
-  const seen = {};
-
-  for (let i = 0; i < array.length; i++) {
-    const currentItem = array[i];
-    if (seen[currentItem]) {
-      if (!duplicates.includes[currentItem]) {
-        duplicates.push(currentItem)
-      }
-    } else {
-      seen[currentItem] = true;
-    };
-  }
-  duplicates.length > 0 ? Logger.log(`Обнаружены дубликаты - ${duplicates}`) : Logger.log(`Дупликатов нет`);
-  return duplicates;
 };

@@ -3,22 +3,22 @@ function getOrders(values) {
   const orders = {}
   for (let indexRow in values) {
     const row = values[indexRow];
-    const date = row[indexColumnDate_];
-    const orderId = row[indexColumnOrderId_];
-    const platform = row[indexColumnPlatform_];
-    const creator = row[indexColumnCreator_];
-    const creatorUid = row[indexColumnCreatorUID_]
-    const recipients = row[indexColumnRecipients_];
-    const recipientsUid = row[indexColumnRecipientsUID_];
-    const type = row[indexColumnType_];
-    const mark = row[indexColumnMark_];
-    const square = row[indexColumnSquare_];
-    const cameras = row[indexColumnCameras_];
-    const st = row[indexColumnSpentTime_];
-    const reviewST = row[indexColumnReviewSpentTime_];
+    const date = row[indexDate];
+    const orderId = row[indexOrderId];
+    const platform = row[indexPlatform];
+    const creator = row[indexCreator];
+    const creatorUid = row[indexCreatorUID]
+    const recipients = row[indexRecipients];
+    const recipientsUid = row[indexRecipientsUID];
+    const type = row[indexType];
+    const mark = row[indexMark];
+    const square = row[indexSquare];
+    const cameras = row[indexCameras];
+    const st = row[indexSpentTime];
+    const reviewST = row[indexReviewSpentTime];
     const recipientsArr = recipients ? recipients.split(',') : [];
     const recipientsArrUid = recipientsUid ? recipientsUid.split(',') : [];
-    const isConverter = row[indexColumnConverter_];
+    const isConverter = row[indexConverter];
 
     if (!orders[orderId]) {
       orders[orderId] = {}
@@ -44,9 +44,6 @@ function getOrders(values) {
 
 function filterOrders(orders) {
   for (const order in orders) {
-    if (order === 1853325){
-      console.log('he')
-    }
     for (const fpEsx in orders[order]) {
       if (Object.keys(orders[order][fpEsx].length > 1)) {
         let i = 0
@@ -55,14 +52,52 @@ function filterOrders(orders) {
           const newOrder = Object.values(orders[order][fpEsx])[i + 1]
 
           //mark все случаи
-          oldOrder[indexColumnMark_] = 0
 
-          //recipients все случаи
-          oldOrder[indexColumnRecipients_] = '' // don't touch
-          oldOrder[indexColumnRecipientsUID_] = '' // don't touch
+          //recipients нет авторевью
+          if (oldOrder[indexCreatorUID] != oldOrder[indexRecipientsUID]) {
+            oldOrder[indexMark] = 0
+
+            const oldOrderRecipientsUidArray = oldOrder[indexRecipientsUID].split(',')
+            const newOrderRecipientsUidArray = newOrder[indexRecipientsUID].split(',')
+            let mergedArrayUid = [... new Set([...oldOrderRecipientsUidArray, ...newOrderRecipientsUidArray])].filter(a => a != '')
+            let mergedStringUid
+            if (mergedArrayUid.length == 1) {
+              mergedStringUid = mergedArrayUid.join('')
+            }
+            else {
+              mergedStringUid = mergedArrayUid.join(',')
+            }
+
+            newOrder[indexRecipientsUID] = mergedStringUid
+            oldOrder[indexRecipientsUID] = '' // don't touch
+
+            const oldOrderRecipientsArray = oldOrder[indexRecipients].split(',')
+            const newOrderRecipientsArray = newOrder[indexRecipients].split(',')
+            let mergedArray = [... new Set([...oldOrderRecipientsArray, ...newOrderRecipientsArray])].filter(a => a != '')
+            let mergedString
+            if (mergedArray.length == 1) {
+              mergedString = mergedArray.join('')
+            }
+            else {
+              mergedString = mergedArray.join(',')
+            }
+
+            newOrder[indexRecipients] = mergedString
+            oldOrder[indexRecipients] = '' // don't touch
+            if (oldOrder[indexSpentTime] && !newOrder[indexSpentTime]) {
+              newOrder[indexSpentTime] = oldOrder[indexSpentTime]
+              oldOrder[indexSpentTime] = 0
+            } else {
+              oldOrder[indexSpentTime] = 0
+            }
+          }
+          else {
+            oldOrder[indexCreator] = ''
+            oldOrder[indexCreatorUID] = ''
+          }
 
           //spentTime все случаи
-          oldOrder[indexColumnSpentTime_] = 0
+
           i++
 
         }
