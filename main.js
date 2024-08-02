@@ -1,6 +1,6 @@
 function main() {
   const time = moment(new Date()).tz('Asia/Tbilisi').format('ll' + ' LTS')
-  const gamification = new Gamification(SS);
+  const gamification = new Gamification(CONSTANTS.spreadsheet);
   const output = new Output(gamification, time);
   output.programs
   Logger.log('Completed')
@@ -40,22 +40,22 @@ class Gamification {
         for (const orderInstance in orders[order][fpEsx]) {
           const feedback = {}
           const row = orders[order][fpEsx][orderInstance];
-          const date = row[indexDate];
-          const orderId = row[indexOrderId];
-          const platform = row[indexPlatform];
-          const creator = row[indexCreator];
-          const creatorUid = row[indexCreatorUID]
-          const recipients = row[indexRecipients];
-          const recipientsUid = row[indexRecipientsUID];
-          const type = row[indexType];
-          const mark = row[indexMark];
-          const square = row[indexSquare];
-          const cameras = row[indexCameras];
-          const st = row[indexSpentTime];
-          const reviewST = row[indexReviewSpentTime];
+          const date = row[CONSTANTS.indexes.indexDate];
+          const orderId = row[CONSTANTS.indexes.indexOrderId];
+          const platform = row[CONSTANTS.indexes.indexPlatform];
+          const creator = row[CONSTANTS.indexes.indexCreator];
+          const creatorUid = row[CONSTANTS.indexes.indexCreatorUID]
+          const recipients = row[CONSTANTS.indexes.indexRecipients];
+          const recipientsUid = row[CONSTANTS.indexes.indexRecipientsUID];
+          const type = row[CONSTANTS.indexes.indexType];
+          const mark = row[CONSTANTS.indexes.indexMark];
+          const square = row[CONSTANTS.indexes.indexSquare];
+          const cameras = row[CONSTANTS.indexes.indexCameras];
+          const st = row[CONSTANTS.indexes.indexSpentTime];
+          const reviewST = row[CONSTANTS.indexes.indexReviewSpentTime];
           const recipientsArr = recipients ? recipients.split(',') : [];
           const recipientsArrUid = recipientsUid ? recipientsUid.split(',') : [];
-          const isConverter = row[indexConverter];
+          const isConverter = row[CONSTANTS.indexes.indexConverter];
 
           let creatorFlag = false;
           for (let indexRecipient in recipientsArrUid) {
@@ -66,11 +66,11 @@ class Gamification {
               feedback[recipientUid].name = recipientsArr[indexRecipient]
             }
             if (creatorUid.indexOf(recipientUid) == 0 && creatorUid.length == recipientUid.length) {
-              feedback[recipientUid].orders[date] = createRecord_(date, orderId, platform, type, mark, square, cameras, st, reviewST, true, true, recipientsArrUid, isConverter);
+              feedback[recipientUid].orders[date] = createRecord(date, orderId, platform, type, mark, square, cameras, st, reviewST, true, true, recipientsArrUid, isConverter);
               creatorFlag = true;
             }
 
-            feedback[recipientUid].orders[date] = createRecord_(date, orderId, platform, type, mark, square, cameras, st, reviewST, true, false, recipientsArrUid, isConverter);
+            feedback[recipientUid].orders[date] = createRecord(date, orderId, platform, type, mark, square, cameras, st, reviewST, true, false, recipientsArrUid, isConverter);
 
           }
           if (!creatorFlag && creatorUid) {
@@ -80,7 +80,7 @@ class Gamification {
               feedback[creatorUid].name = creator;
 
             }
-            feedback[creatorUid].orders[date] = createRecord_(date, orderId, platform, type, mark, square, cameras, st, reviewST, false, true, recipientsArrUid, isConverter);
+            feedback[creatorUid].orders[date] = createRecord(date, orderId, platform, type, mark, square, cameras, st, reviewST, false, true, recipientsArrUid, isConverter);
             feedback[creatorUid].order //todo += reviewST
 
           }
@@ -99,23 +99,23 @@ class Gamification {
 
               this.orders.push(orderAsDateString)
 
-              if (orderAsObject.type === TYPES_OF_ORDERS.fp || orderAsObject.type === TYPES_OF_ORDERS.esx) {
+              if (orderAsObject.type === CONSTANTS.fp || orderAsObject.type === CONSTANTS.esx) {
 
                 let converterType;
 
                 const square = typeof orderAsObject.square == 'number' ? orderAsObject.square : typeof orderAsObject.square == 'string' ? orderAsObject.square : 0;
                 const cameras = typeof orderAsObject.cameras == 'number' ? orderAsObject.cameras : typeof orderAsObject.cameras == 'string' ? orderAsObject.cameras : 0;
 
-                const normalBig = square >= TYPES_OF_ORDERS.bigOrderReqs.square || cameras >= TYPES_OF_ORDERS.bigOrderReqs.cameras ? TYPES_OF_ORDERS.big : TYPES_OF_ORDERS.normal;
+                const normalBig = square >= CONSTANTS.bigOrderReqs.square || cameras >= CONSTANTS.bigOrderReqs.cameras ? CONSTANTS.big : CONSTANTS.normal;
 
-                if (orderAsObject.type === TYPES_OF_ORDERS.esx && normalBig === TYPES_OF_ORDERS.big) {
+                if (orderAsObject.type === CONSTANTS.esx && normalBig === CONSTANTS.big) {
                   converterType = 'converter'
                 }
-                else if (orderAsObject.type === TYPES_OF_ORDERS.fp) {
+                else if (orderAsObject.type === CONSTANTS.fp) {
                   converterType = 'noConverter'
                 }
                 else {
-                  converterType = orderAsObject.type === TYPES_OF_ORDERS.esx && orderAsObject.isConverter ? 'converter' : 'noConverter';
+                  converterType = orderAsObject.type === CONSTANTS.esx && orderAsObject.isConverter ? 'converter' : 'noConverter';
                 }
 
                 const drafter = members[drafterUid].data[orderAsObject.type][normalBig]
@@ -131,7 +131,7 @@ class Gamification {
                   }
                 }
                 else if (orderAsObject.isCreator && !orderAsObject.isRecipient) {
-                  converterType = 'review'
+                  converterType = CONSTANTS.quantiles.review
                   if (orderAsObject.reviewST) {
 
                     drafter[converterType].time += Number(orderAsObject.reviewST);
@@ -160,49 +160,49 @@ class Gamification {
   getCalculations(members) {
 
     for (const drafterUid of Object.values(members)) {
-      for (const fpEsx of TYPES_OF_ORDERS.fpOrEsxKeysList) {
-        for (const normalBig of TYPES_OF_ORDERS.normalBigKeysList) {
+      for (const fpEsx of CONSTANTS.fpOrEsxKeysList) {
+        for (const normalBig of CONSTANTS.normalBigKeysList) {
 
           const program = drafterUid.data[fpEsx][normalBig];
           drafterUid.dateStart = new Date(this.orders.at(0)).getTime()
 
-
           //SPEED
           let time, cameras
 
-          if (program.review.time || program.review.cameras) {
-            time = program.review.time;
-            cameras = program.review.cameras;
-            program.review.speed = Formulas.getSpeed(time, cameras);
-          };
-
-          for (const converterType of Object.values(TYPES_OF_ORDERS.converterType)) {
+          for (const converterType of Object.values(CONSTANTS.converterType)) {
 
             if (program[converterType].time) {
 
-              time = program[converterType].time;
-              cameras = program[converterType].cameras;
-              program[converterType].speed = Formulas.getSpeed(time, cameras);
+              if (converterType == CONSTANTS.converterType.review) {
+                time = program.review.time;
+                cameras = program.review.cameras;
+                program.review.speed = Formulas.getSpeed(time, cameras);
+              }
+              else {
+                time = program[converterType].time;
+                cameras = program[converterType].cameras;
+                program[converterType].speed = Formulas.getSpeed(time, cameras);
 
-              //TOTAL
-              const ordersSolo = program[converterType].ordersSolo;
-              const ordersShared = program[converterType].ordersShared;
-              program[converterType].ordersTotal = ordersSolo + ordersShared;
+                //TOTAL
+                const ordersSolo = program[converterType].ordersSolo;
+                const ordersShared = program[converterType].ordersShared;
+                program[converterType].ordersTotal = ordersSolo + ordersShared;
 
-              //RATING
-              program[converterType].markAverage = Formulas.getAverage(program[converterType].markArray);
+                //RATING
+                program[converterType].markAverage = Formulas.getAverage(program[converterType].markArray);
 
-              //SOLO_PERCENT
-              let totalSoloOrders = 0;
-              let totalShareOrders = 0;
+                //SOLO_PERCENT
+                let totalSoloOrders = 0;
+                let totalShareOrders = 0;
 
-              for (const converterType1 of Object.values(TYPES_OF_ORDERS.converterType)) {
-                totalSoloOrders += program[converterType1].ordersSolo;
-                totalShareOrders += program[converterType1].ordersShared;
+                for (const converterType1 of [CONSTANTS.converterType.converter, CONSTANTS.converterType.noConverter]) {
+                  totalSoloOrders += program[converterType1].ordersSolo;
+                  totalShareOrders += program[converterType1].ordersShared;
+                };
+                program[converterType].soloPercent = Formulas.getSoloPercent(totalSoloOrders, totalShareOrders);
               };
-              program[converterType].soloPercent = Formulas.getSoloPercent(totalSoloOrders, totalShareOrders);
             };
-          };
+          }
         };
       };
     };
@@ -240,15 +240,15 @@ class Gamification {
         teams[currentLeaderUid][memberUid] = emailsDb[memberUid]
       }
     };
-    Logger.log('Checking duplicates...');
+    Logger.log('Checking duplicates...')
     findDuplicates(membersArr)
-    Logger.log('Teams created');
+    Logger.log('Teams created')
 
     return teams
   };
 
   getArraysForQuantile() {
-    const array = typeFactory()
+    const array = Factories.typeFactory()
 
     function draw(programData, quantileCategory, converterType) {
       quantileCategory.orders.push(programData[converterType].ordersTotal)
@@ -266,17 +266,17 @@ class Gamification {
 
     for (const drafterUid of Object.values(this.members)) {
       const uid = drafterUid.uid
-      const programFpNormal = drafterUid.data['DRAWING']["NORMAL"]
-      const programFpBig = drafterUid.data['DRAWING']["BIG"]
-      const programEsxNormal = drafterUid.data['DRAWING_ESX']["NORMAL"]
-      const programEsxBig = drafterUid.data['DRAWING_ESX']["BIG"]
+      const programFpNormal = drafterUid.data[CONSTANTS.fp][CONSTANTS.normal]
+      const programFpBig = drafterUid.data[CONSTANTS.fp][CONSTANTS.big]
+      const programEsxNormal = drafterUid.data[CONSTANTS.esx][CONSTANTS.normal]
+      const programEsxBig = drafterUid.data[CONSTANTS.esx][CONSTANTS.big]
 
       // DRAW
-      draw(programFpNormal, array.draw.fp_normal_noConv, 'noConverter')
-      draw(programFpBig, array.draw.fp_big_noConv, 'noConverter')
-      draw(programEsxNormal, array.draw.esx_normal_conv, 'converter')
-      draw(programEsxBig, array.draw.esx_big_conv, 'converter')
-      draw(programEsxNormal, array.draw.esx_normal_noConv, 'noConverter')
+      draw(programFpNormal, array.draw.fp_normal_noConv, CONSTANTS.converterType.noConverter)
+      draw(programFpBig, array.draw.fp_big_noConv, CONSTANTS.converterType.noConverter)
+      draw(programEsxNormal, array.draw.esx_normal_conv, CONSTANTS.converterType.converter)
+      draw(programEsxBig, array.draw.esx_big_conv, CONSTANTS.converterType.converter)
+      draw(programEsxNormal, array.draw.esx_normal_noConv, CONSTANTS.converterType.noConverter)
 
       // REVIEW
       review(programFpNormal.review, array.review.fp_normal_noConv)
@@ -334,7 +334,7 @@ class Gamification {
       return obj
     }
 
-    const sheetWeights = SS.getSheetByName('weights')
+    const sheetWeights = CONSTANTS.spreadsheet.getSheetByName('weights')
     const reviewWeights = sheetWeights.getRange('A1:E5').getValues().slice(1)
     const drawWeights = sheetWeights.getRange('A7:F12').getValues().slice(1)
     let obj = {
@@ -349,82 +349,82 @@ class Gamification {
     const weights = this.weights
 
     for (const drafterUid of Object.values(this.members)) {
-      for (const fpEsx of TYPES_OF_ORDERS.fpOrEsxKeysList) {
-        for (const normalBig of TYPES_OF_ORDERS.normalBigKeysList) {
+      for (const fpEsx of CONSTANTS.fpOrEsxKeysList) {
+        for (const normalBig of CONSTANTS.normalBigKeysList) {
 
-          let program = drafterUid.data[fpEsx][normalBig]
+          let drafter = drafterUid.data[fpEsx][normalBig]
 
           for (let drawReview of Object.keys(this.arraysForQuantile)) {
             let drawReviewObj = this.arraysForQuantile[drawReview]
             let converterType
 
-            if (fpEsx === 'DRAWING' && normalBig === 'NORMAL') {
-              let group = 'fp_normal_noConv'
+            if (fpEsx === CONSTANTS.fp && normalBig === CONSTANTS.normal) {
+              let group = CONSTANTS.weights.fpNormalNoConv
 
               switch (drawReview) {
-                case 'draw':
-                  converterType = 'noConverter'
-                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
+                case CONSTANTS.quantiles.draw:
+                  converterType = CONSTANTS.converterType.noConverter
+                  this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, group)
                   break;
 
-                case 'review':
-                  converterType = 'review'
-                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
+                case CONSTANTS.quantiles.review:
+                  converterType = CONSTANTS.converterType.review
+                  this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, group)
                   break;
                 default:
                   'Choose correct type'
                   break;
               }
             }
-            if (fpEsx === 'DRAWING' && normalBig === 'BIG') {
-              let group = 'fp_big_noConv'
+            if (fpEsx === CONSTANTS.fp && normalBig === CONSTANTS.big) {
+              let group = CONSTANTS.weights.fpBigNoConv
 
               switch (drawReview) {
-                case 'draw':
-                  converterType = 'noConverter'
-                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
+                case CONSTANTS.quantiles.draw:
+                  converterType = CONSTANTS.converterType.noConverter
+                  this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, group)
                   break;
 
-                case 'review':
-                  converterType = 'review'
-                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
+                case CONSTANTS.quantiles.review:
+                  converterType = CONSTANTS.converterType.review
+                  this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, group)
                   break;
                 default:
                   'Choose correct type'
                   break;
               }
             }
-            if (fpEsx === 'DRAWING_ESX' && normalBig === 'NORMAL') {
-              let group = 'esx_normal_conv'
-              let groupNoConv = 'esx_normal_noConv'
+            if (fpEsx === CONSTANTS.esx && normalBig === CONSTANTS.normal) {
+              let group = CONSTANTS.weights.esxNormalConv
+              let groupNoConv = CONSTANTS.weights.esxNormalNoConv
 
               switch (drawReview) {
-                case 'draw':
-                  converterType = 'noConverter'
-                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, groupNoConv)
-                  this.getQuantileAndPlace(program, 'converter', drawReviewObj, weights, drawReview, group)
+                case CONSTANTS.quantiles.draw:
+                  converterType = CONSTANTS.converterType.noConverter
+                  this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, groupNoConv)
+                  this.getQuantileAndPlace(drafter, CONSTANTS.converterType.converter, drawReviewObj, weights, drawReview, group)
                   break;
 
-                case 'review':
-                  converterType = 'review'
-                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
+                case CONSTANTS.quantiles.review:
+                  converterType = CONSTANTS.converterType.review
+                  this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, group)
                   break;
                 default:
                   'Choose correct type'
                   break;
               }
             }
-            if (fpEsx === 'DRAWING_ESX' && normalBig === 'BIG') {
-              let group = 'esx_big_conv'
+            if (fpEsx === CONSTANTS.esx && normalBig === CONSTANTS.big) {
+              let group = CONSTANTS.weights.esxBigConv
               switch (drawReview) {
-                case 'draw':
-                  converterType = 'converter'
-                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
+                case CONSTANTS.quantiles.draw:
+                  converterType = CONSTANTS.converterType.converter
+                  this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, group)
                   break;
 
-                case 'review':
-                  converterType = 'review'
-                  this.getQuantileAndPlace(program, converterType, drawReviewObj, weights, drawReview, group)
+                case CONSTANTS.quantiles.review:
+                  converterType = CONSTANTS.converterType.review
+                  this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, group)
                   break;
                 default:
                   'Choose correct type'
@@ -437,79 +437,73 @@ class Gamification {
     }
   }
 
-  getQuantileAndPlace(program, converterType, typeObj, weights, type, group) {
+  getQuantileAndPlace(drafter, converterType, typeObj, weights, type, group) {
 
     let markPoints = 0
     let soloPercentPoints = 0
 
     //Orders
-    const { place: oPlace, places: oPlaces, quantile: oQuantile } = Formulas.getPlace(typeObj[group].orders, program[converterType].ordersTotal)
-    program[converterType].ordersPlace = oPlace
-    program[converterType].ordersPlaces = oPlaces
-    program[converterType].ordersQuantile = oQuantile
+    const { place: oPlace, places: oPlaces, quantile: oQuantile } = Formulas.getPlace(typeObj[group].orders, drafter[converterType].ordersTotal)
+    drafter[converterType].ordersPlace = oPlace
+    drafter[converterType].ordersPlaces = oPlaces
+    drafter[converterType].ordersQuantile = oQuantile
 
-    let ordersQuantile = program[converterType].ordersQuantile
+    let ordersQuantile = drafter[converterType].ordersQuantile
     let ordersWeight = weights[type][group].orders
-    program[converterType].ordersPoints = ordersQuantile * ordersWeight
-    let ordersPoints = program[converterType].ordersPoints
+    drafter[converterType].ordersPoints = ordersQuantile * ordersWeight
+    let ordersPoints = drafter[converterType].ordersPoints
 
     if (ordersQuantile) {
-      if (type === 'draw') {
-        const { place: mPlace, places: mPlaces, quantile: mQuantile } = Formulas.getPlace(typeObj[group].mark, program[converterType].markAverage)
-        program[converterType].markAveragePlace = mPlace
-        program[converterType].markAveragePlaces = mPlaces
-        program[converterType].markQuantile = mQuantile
+      if (type === CONSTANTS.quantiles.draw) {
+        const { place: mPlace, places: mPlaces, quantile: mQuantile } = Formulas.getPlace(typeObj[group].mark, drafter[converterType].markAverage)
+        drafter[converterType].markAveragePlace = mPlace
+        drafter[converterType].markAveragePlaces = mPlaces
+        drafter[converterType].markQuantile = mQuantile
 
-        const { place: spPlace, places: spPlaces, quantile: spQuantile } = Formulas.getPlace(typeObj[group].soloPercent, program[converterType].soloPercent)
-        program[converterType].soloPercentPlace = spPlace
-        program[converterType].soloPercentPlaces = spPlaces
-        program[converterType].soloPercentQuantile = spQuantile
-
-        let markQuantile = program[converterType].markQuantile
-        let soloPercentQuantile = program[converterType].soloPercentQuantile
-
+        let markQuantile = drafter[converterType].markQuantile
         let markWeight = weights[type][group].mark
+        drafter[converterType].markPoints = markQuantile * markWeight
+        markPoints = drafter[converterType].markPoints
+
+
+        const { place: spPlace, places: spPlaces, quantile: spQuantile } = Formulas.getPlace(typeObj[group].soloPercent, drafter[converterType].soloPercent)
+        drafter[converterType].soloPercentPlace = spPlace
+        drafter[converterType].soloPercentPlaces = spPlaces
+        drafter[converterType].soloPercentQuantile = spQuantile
+
+        let soloPercentQuantile = drafter[converterType].soloPercentQuantile
         let soloPercentWeight = weights[type][group].solo
-
-        program[converterType].markPoints = markQuantile * markWeight
-        program[converterType].soloPercentPoints = soloPercentQuantile * soloPercentWeight
-
-        markPoints = program[converterType].markPoints
-        soloPercentPoints = program[converterType].soloPercentPoints
+        drafter[converterType].soloPercentPoints = soloPercentQuantile * soloPercentWeight
+        soloPercentPoints = drafter[converterType].soloPercentPoints
 
       }
 
-      const { place: cPlace, places: cPlaces, quantile: cQuantile } = Formulas.getPlace(typeObj[group].cameras, program[converterType].cameras)
-      program[converterType].camerasPlace = cPlace
-      program[converterType].camerasPlaces = cPlaces
-      program[converterType].camerasQuantile = cQuantile
+      const { place: cPlace, places: cPlaces, quantile: cQuantile } = Formulas.getPlace(typeObj[group].cameras, drafter[converterType].cameras)
+      drafter[converterType].camerasPlace = cPlace
+      drafter[converterType].camerasPlaces = cPlaces
+      drafter[converterType].camerasQuantile = cQuantile
 
-      const { place: sPlace, places: sPlaces, quantile: sQuantile } = Formulas.getPlace(typeObj[group].speed, program[converterType].speed, 'speed')
-      program[converterType].speedPlace = sPlace
-      program[converterType].speedPlaces = sPlaces
-      program[converterType].speedQuantile = sQuantile
-
-      let camerasQuantile = program[converterType].camerasQuantile
-      let speedQuantile = program[converterType].speedQuantile
-
+      let camerasQuantile = drafter[converterType].camerasQuantile
       let camerasWeight = weights[type][group].cameras
+      drafter[converterType].camerasPoints = camerasQuantile * camerasWeight
+      let camerasPoints = drafter[converterType].camerasPoints
+
+
+      const { place: sPlace, places: sPlaces, quantile: sQuantile } = Formulas.getPlace(typeObj[group].speed, drafter[converterType].speed, 'speed')
+      drafter[converterType].speedPlace = sPlace
+      drafter[converterType].speedPlaces = sPlaces
+      drafter[converterType].speedQuantile = sQuantile
+
+      let speedQuantile = drafter[converterType].speedQuantile
       let speedWeight = weights[type][group].speed
+      drafter[converterType].speedPoints = speedQuantile * speedWeight
+      let speedPoints = drafter[converterType].speedPoints
 
-      program[converterType].camerasPoints = camerasQuantile * camerasWeight
-      program[converterType].speedPoints = speedQuantile * speedWeight
-
-      let camerasPoints = program[converterType].camerasPoints
-      let speedPoints = program[converterType].speedPoints
-
-      program[converterType].totalPoints = ordersPoints + camerasPoints + markPoints + soloPercentPoints + speedPoints
+      drafter[converterType].totalPoints = ordersPoints + camerasPoints + markPoints + soloPercentPoints + speedPoints
 
     }
   }
 }
-
-
-
-
 
 class Output {
   constructor(gamification, time) {
@@ -519,8 +513,8 @@ class Output {
 
   get programs() {
 
-    const drawSheet = SS.getSheetByName('draw')
-    const reviewSheet = SS.getSheetByName('review')
+    const drawSheet = CONSTANTS.spreadsheet.getSheetByName(CONSTANTS.quantiles.draw)
+    const reviewSheet = CONSTANTS.spreadsheet.getSheetByName(CONSTANTS.quantiles.review)
     let drawOutput = [[
       'uid', 'date', 'type', 'orders', 'cameras', 'mark_avg', 'solo_orders', 'spent_time', 'solo_percent', 'speed', 'orders_quantile', 'cameras_quantile', 'mark_quantile', 'solo_percent_quantile', 'speed_quantile', 'orders_points', 'cameras_points', 'mark_points', 'solo_percent_points', 'speed_points', 'total_points',
     ]]
@@ -536,22 +530,20 @@ class Output {
       const program = drafterUid.data
 
       // Draw
-      const drawValues1 = Object.values(drawOutputFactory(uid, date, 'fp_normal_noConv', program[TYPES_OF_ORDERS.fp][TYPES_OF_ORDERS.normal], 'noConverter'))
-      const drawValues2 = Object.values(drawOutputFactory(uid, date, 'fp_big_noConv', program[TYPES_OF_ORDERS.fp][TYPES_OF_ORDERS.big], 'noConverter'))
-      const drawValues3 = Object.values(drawOutputFactory(uid, date, 'esx_normal_conv', program[TYPES_OF_ORDERS.esx][TYPES_OF_ORDERS.normal], 'converter'))
-      const drawValues4 = Object.values(drawOutputFactory(uid, date, 'esx_big_conv', program[TYPES_OF_ORDERS.esx][TYPES_OF_ORDERS.big], 'converter'))
-      const drawValues5 = Object.values(drawOutputFactory(uid, date, 'esx_normal_noConv', program[TYPES_OF_ORDERS.esx][TYPES_OF_ORDERS.normal], 'noConverter'))
+      const drawValues1 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.fpNormalNoConv, program[CONSTANTS.fp][CONSTANTS.normal], 'noConverter'))
+      const drawValues2 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.fpBigNoConv, program[CONSTANTS.fp][CONSTANTS.big], 'noConverter'))
+      const drawValues3 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.esxNormalConv, program[CONSTANTS.esx][CONSTANTS.normal], 'converter'))
+      const drawValues4 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.esxBigConv, program[CONSTANTS.esx][CONSTANTS.big], 'converter'))
+      const drawValues5 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.esxNormalNoConv, program[CONSTANTS.esx][CONSTANTS.normal], 'noConverter'))
 
       // Review
-      const reviewValues1 = Object.values(reviewOutputFactory(uid, date, 'fp_normal', program[TYPES_OF_ORDERS.fp][TYPES_OF_ORDERS.normal]))
-      const reviewValues2 = Object.values(reviewOutputFactory(uid, date, 'fp_big', program[TYPES_OF_ORDERS.fp][TYPES_OF_ORDERS.big]))
-      const reviewValues3 = Object.values(reviewOutputFactory(uid, date, 'esx_normal', program[TYPES_OF_ORDERS.esx][TYPES_OF_ORDERS.normal]))
-      const reviewValues4 = Object.values(reviewOutputFactory(uid, date, 'esx_big', program[TYPES_OF_ORDERS.esx][TYPES_OF_ORDERS.big]))
+      const reviewValues1 = Object.values(Factories.reviewOutputFactory(uid, date, 'fp_normal', program[CONSTANTS.fp][CONSTANTS.normal]))
+      const reviewValues2 = Object.values(Factories.reviewOutputFactory(uid, date, 'fp_big', program[CONSTANTS.fp][CONSTANTS.big]))
+      const reviewValues3 = Object.values(Factories.reviewOutputFactory(uid, date, 'esx_normal', program[CONSTANTS.esx][CONSTANTS.normal]))
+      const reviewValues4 = Object.values(Factories.reviewOutputFactory(uid, date, 'esx_big', program[CONSTANTS.esx][CONSTANTS.big]))
 
       drawOutput.push(drawValues1, drawValues2, drawValues3, drawValues4, drawValues5)
       reviewOutput.push(reviewValues1, reviewValues2, reviewValues3, reviewValues4)
-
-
     };
 
     drawSheet.getDataRange().clear();
@@ -565,10 +557,7 @@ class Output {
 
 class Member {
   constructor() {
-    this.time = 0;
-    this.totalPointsArr = [];
-    this.points = factoryPointsFpOrEsx();
-    this[TYPES_OF_ORDERS.fp] = factoryNormalBig();
-    this[TYPES_OF_ORDERS.esx] = factoryNormalBig();
+    this[CONSTANTS.fp] = Factories.factoryNormalBig();
+    this[CONSTANTS.esx] = Factories.factoryNormalBig();
   };
 };

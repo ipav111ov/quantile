@@ -3,22 +3,22 @@ function getOrders(values) {
   const orders = {}
   for (let indexRow in values) {
     const row = values[indexRow];
-    const date = row[indexDate];
-    const orderId = row[indexOrderId];
-    const platform = row[indexPlatform];
-    const creator = row[indexCreator];
-    const creatorUid = row[indexCreatorUID]
-    const recipients = row[indexRecipients];
-    const recipientsUid = row[indexRecipientsUID];
-    const type = row[indexType];
-    const mark = row[indexMark];
-    const square = row[indexSquare];
-    const cameras = row[indexCameras];
-    const st = row[indexSpentTime];
-    const reviewST = row[indexReviewSpentTime];
+    const date = row[CONSTANTS.indexes.indexDate];
+    const orderId = row[CONSTANTS.indexes.indexOrderId];
+    const platform = row[CONSTANTS.indexes.indexPlatform];
+    const creator = row[CONSTANTS.indexes.indexCreator];
+    const creatorUid = row[CONSTANTS.indexes.indexCreatorUID]
+    const recipients = row[CONSTANTS.indexes.indexRecipients];
+    const recipientsUid = row[CONSTANTS.indexes.indexRecipientsUID];
+    const type = row[CONSTANTS.indexes.indexType];
+    const mark = row[CONSTANTS.indexes.indexMark];
+    const square = row[CONSTANTS.indexes.indexSquare];
+    const cameras = row[CONSTANTS.indexes.indexCameras];
+    const st = row[CONSTANTS.indexes.indexSpentTime];
+    const reviewST = row[CONSTANTS.indexes.indexReviewSpentTime];
     const recipientsArr = recipients ? recipients.split(',') : [];
     const recipientsArrUid = recipientsUid ? recipientsUid.split(',') : [];
-    const isConverter = row[indexConverter];
+    const isConverter = row[CONSTANTS.indexes.indexConverter];
 
     if (!orders[orderId]) {
       orders[orderId] = {}
@@ -54,11 +54,11 @@ function filterOrders(orders) {
           //mark все случаи
 
           //recipients нет авторевью
-          if (oldOrder[indexCreatorUID] != oldOrder[indexRecipientsUID]) {
-            oldOrder[indexMark] = 0
+          if (oldOrder[CONSTANTS.indexes.indexCreatorUID] != oldOrder[CONSTANTS.indexes.indexRecipientsUID]) {
+            oldOrder[CONSTANTS.indexes.indexMark] = 0
 
-            const oldOrderRecipientsUidArray = oldOrder[indexRecipientsUID].split(',')
-            const newOrderRecipientsUidArray = newOrder[indexRecipientsUID].split(',')
+            const oldOrderRecipientsUidArray = oldOrder[CONSTANTS.indexes.indexRecipientsUID].split(',')
+            const newOrderRecipientsUidArray = newOrder[CONSTANTS.indexes.indexRecipientsUID].split(',')
             let mergedArrayUid = [... new Set([...oldOrderRecipientsUidArray, ...newOrderRecipientsUidArray])].filter(a => a != '')
             let mergedStringUid
             if (mergedArrayUid.length == 1) {
@@ -68,11 +68,11 @@ function filterOrders(orders) {
               mergedStringUid = mergedArrayUid.join(',')
             }
 
-            newOrder[indexRecipientsUID] = mergedStringUid
-            oldOrder[indexRecipientsUID] = '' // don't touch
+            newOrder[CONSTANTS.indexes.indexRecipientsUID] = mergedStringUid
+            oldOrder[CONSTANTS.indexes.indexRecipientsUID] = '' // don't touch
 
-            const oldOrderRecipientsArray = oldOrder[indexRecipients].split(',')
-            const newOrderRecipientsArray = newOrder[indexRecipients].split(',')
+            const oldOrderRecipientsArray = oldOrder[CONSTANTS.indexes.indexRecipients].split(',')
+            const newOrderRecipientsArray = newOrder[CONSTANTS.indexes.indexRecipients].split(',')
             let mergedArray = [... new Set([...oldOrderRecipientsArray, ...newOrderRecipientsArray])].filter(a => a != '')
             let mergedString
             if (mergedArray.length == 1) {
@@ -82,18 +82,18 @@ function filterOrders(orders) {
               mergedString = mergedArray.join(',')
             }
 
-            newOrder[indexRecipients] = mergedString
-            oldOrder[indexRecipients] = '' // don't touch
-            if (oldOrder[indexSpentTime] && !newOrder[indexSpentTime]) {
-              newOrder[indexSpentTime] = oldOrder[indexSpentTime]
-              oldOrder[indexSpentTime] = 0
+            newOrder[CONSTANTS.indexes.indexRecipients] = mergedString
+            oldOrder[CONSTANTS.indexes.indexRecipients] = '' // don't touch
+            if (oldOrder[CONSTANTS.indexes.indexSpentTime] && !newOrder[CONSTANTS.indexes.indexSpentTime]) {
+              newOrder[CONSTANTS.indexes.indexSpentTime] = oldOrder[CONSTANTS.indexes.indexSpentTime]
+              oldOrder[CONSTANTS.indexes.indexSpentTime] = 0
             } else {
-              oldOrder[indexSpentTime] = 0
+              oldOrder[CONSTANTS.indexes.indexSpentTime] = 0
             }
           }
           else {
-            oldOrder[indexCreator] = ''
-            oldOrder[indexCreatorUID] = ''
+            oldOrder[CONSTANTS.indexes.indexCreator] = ''
+            oldOrder[CONSTANTS.indexes.indexCreatorUID] = ''
           }
 
           //spentTime все случаи
@@ -108,7 +108,7 @@ function filterOrders(orders) {
 }
 
 
-function createRecord_(date, orderId, platform, type, mark, square, cameras, st, reviewST, recipientBoolean, creatorBoolean, recipientArray, converterBoolean) {
+function createRecord(date, orderId, platform, type, mark, square, cameras, st, reviewST, recipientBoolean, creatorBoolean, recipientArray, converterBoolean) {
   const result = {};
   result['date'] = date
   result['orderId'] = orderId;
