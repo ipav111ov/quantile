@@ -1,4 +1,6 @@
 function main() {
+  Logger.log('hello')
+
   const time = moment(new Date()).tz('Asia/Tbilisi').format('ll' + ' LTS')
   const gamification = new Gamification(CONSTANTS.spreadsheet);
   const output = new Output(gamification, time);
@@ -302,7 +304,6 @@ class Gamification {
           newGroup.sort((a, b) => a - b)
           groups[group] = newGroup
         }
-
       }
     }
     return array

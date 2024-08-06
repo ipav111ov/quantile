@@ -42,7 +42,7 @@ function getOrders(values) {
   return orders
 }
 
-function filterOrders(orders) {
+function filterOrders(orders) { 
   for (const order in orders) {
     for (const fpEsx in orders[order]) {
       if (Object.keys(orders[order][fpEsx].length > 1)) {
@@ -51,55 +51,11 @@ function filterOrders(orders) {
           const oldOrder = Object.values(orders[order][fpEsx])[i]
           const newOrder = Object.values(orders[order][fpEsx])[i + 1]
 
-          //mark все случаи
-
-          //recipients нет авторевью
-          if (oldOrder[CONSTANTS.indexes.indexCreatorUID] != oldOrder[CONSTANTS.indexes.indexRecipientsUID]) {
-            oldOrder[CONSTANTS.indexes.indexMark] = 0
-
-            const oldOrderRecipientsUidArray = oldOrder[CONSTANTS.indexes.indexRecipientsUID].split(',')
-            const newOrderRecipientsUidArray = newOrder[CONSTANTS.indexes.indexRecipientsUID].split(',')
-            let mergedArrayUid = [... new Set([...oldOrderRecipientsUidArray, ...newOrderRecipientsUidArray])].filter(a => a != '')
-            let mergedStringUid
-            if (mergedArrayUid.length == 1) {
-              mergedStringUid = mergedArrayUid.join('')
-            }
-            else {
-              mergedStringUid = mergedArrayUid.join(',')
-            }
-
-            newOrder[CONSTANTS.indexes.indexRecipientsUID] = mergedStringUid
-            oldOrder[CONSTANTS.indexes.indexRecipientsUID] = '' // don't touch
-
-            const oldOrderRecipientsArray = oldOrder[CONSTANTS.indexes.indexRecipients].split(',')
-            const newOrderRecipientsArray = newOrder[CONSTANTS.indexes.indexRecipients].split(',')
-            let mergedArray = [... new Set([...oldOrderRecipientsArray, ...newOrderRecipientsArray])].filter(a => a != '')
-            let mergedString
-            if (mergedArray.length == 1) {
-              mergedString = mergedArray.join('')
-            }
-            else {
-              mergedString = mergedArray.join(',')
-            }
-
-            newOrder[CONSTANTS.indexes.indexRecipients] = mergedString
-            oldOrder[CONSTANTS.indexes.indexRecipients] = '' // don't touch
-            if (oldOrder[CONSTANTS.indexes.indexSpentTime] && !newOrder[CONSTANTS.indexes.indexSpentTime]) {
-              newOrder[CONSTANTS.indexes.indexSpentTime] = oldOrder[CONSTANTS.indexes.indexSpentTime]
-              oldOrder[CONSTANTS.indexes.indexSpentTime] = 0
-            } else {
-              oldOrder[CONSTANTS.indexes.indexSpentTime] = 0
-            }
+          mergeRecipientsProcedure(oldOrder, newOrder, 'uid', orders, order, fpEsx, i)
+          i = mergeRecipientsProcedure(oldOrder, newOrder, '', orders, order, fpEsx, i)
+          if (i === 0) {
+            continue
           }
-          else {
-            oldOrder[CONSTANTS.indexes.indexCreator] = ''
-            oldOrder[CONSTANTS.indexes.indexCreatorUID] = ''
-          }
-
-          //spentTime все случаи
-
-          i++
-
         }
       }
     }
@@ -107,6 +63,70 @@ function filterOrders(orders) {
   return orders
 }
 
+function mergeRecipientsProcedure(oldOrder, newOrder, type, orders, order, fpEsx, i) {
+  let recipients, creator
+  if (type === 'uid') {
+    recipients = CONSTANTS.indexes.indexRecipientsUID
+    creator = CONSTANTS.indexes.indexCreatorUID
+  }
+  else {
+    recipients = CONSTANTS.indexes.indexRecipients
+    creator = CONSTANTS.indexes.indexCreator
+  }
+  const oldOrderRecipientsArray = oldOrder[recipients].split(',')
+  const newOrderRecipientsArray = newOrder[recipients].split(',')
+
+  //mark
+  oldOrder[CONSTANTS.indexes.indexMark] = 0
+
+  //если креатор содержится в реципиентах
+  if (oldOrderRecipientsArray.includes(oldOrder[creator])) {
+    // если реципиент 1 => авторевью
+    if (oldOrderRecipientsArray.length === 1) {
+      // содержится ли креатор в новом ордере 1 или больше т.е проверка на дублирование авторевью
+      if (newOrderRecipientsArray.includes(oldOrder[creator])) {
+        if (newOrderRecipientsArray.length !== 1) {
+          newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
+        }
+      }
+    }
+    // если кто-то рисовал , а после пришел другой с авторевью
+    else {
+      newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
+
+      newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
+    }
+    delete orders[order][fpEsx][oldOrder[CONSTANTS.indexes.indexDate]]
+    i = 0
+    return i
+  }
+  // если креатор не содержится в реципиентах
+  else {
+    // суммировать время только в случе наличия реципиентов
+    if (oldOrder[recipients]) {
+      newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
+      oldOrder[CONSTANTS.indexes.indexSpentTime] = 0
+
+      newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
+      oldOrder[recipients] = ''
+    }
+  }
+  i++
+  return i
+}
+
+
+function mergeString(oldArray, newArray) {
+  let mergedArray = [... new Set([...oldArray, ...newArray])].filter(a => a != '')
+  let mergedString
+  if (mergedArray.length == 1) {
+    mergedString = mergedArray.join('')
+  }
+  else {
+    mergedString = mergedArray.join(',')
+  }
+  return mergedString
+}
 
 function createRecord(date, orderId, platform, type, mark, square, cameras, st, reviewST, recipientBoolean, creatorBoolean, recipientArray, converterBoolean) {
   const result = {};

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <base target="_top">
+</head>
+
+<body>
+  <h1>Нажмите старт, чтобы запустить расчет Gamification</h1>
+  <button id='btn'>Start</button>
+  <script>
+    document.getElementById('btn').addEventListener('click', start)
+
+      function start(){
+        google.script.run.main()
+      }
+  </script>
+</body>
+
+</html>

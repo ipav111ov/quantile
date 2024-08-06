@@ -47,7 +47,7 @@ const CONSTANTS = {
     indexReviewSpentTime: 11,
     indexCreatorUID: 12,
     indexRecipientsUID: 13,
-    indexConverter: 19,
+    indexConverter: 17,
   },
 
 }
