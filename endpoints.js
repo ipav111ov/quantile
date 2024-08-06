@@ -11,12 +11,14 @@ function sendJson(json) {
 
   Logger.log('fetching data now...');
 
+  const key = PropertiesService.getScriptProperties('key')
+  
   try {
     let options = {
       'method': 'post',
       'contentType': 'application/json',
       'payload': json,
-      'headers': { 'auth': CONSTANTS.key },
+      'headers': { 'auth': key },
       'muteHttpExceptions': true
     };
 

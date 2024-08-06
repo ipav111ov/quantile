@@ -30,7 +30,7 @@ class Gamification {
     const json = JSON.stringify(this.members)
     const blob = Utilities.newBlob(json, 'application/json')
     const file = Drive.Files.create(fileSets, blob)
-    sendJson(json)
+    // sendJson(json)
   }
 
   getMembers() {
