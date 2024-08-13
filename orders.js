@@ -42,7 +42,7 @@ function getOrders(values) {
   return orders
 }
 
-function filterOrders(orders) { 
+function filterOrders(orders) {
   for (const order in orders) {
     for (const fpEsx in orders[order]) {
       if (Object.keys(orders[order][fpEsx].length > 1)) {
@@ -76,40 +76,32 @@ function mergeRecipientsProcedure(oldOrder, newOrder, type, orders, order, fpEsx
   const oldOrderRecipientsArray = oldOrder[recipients].split(',')
   const newOrderRecipientsArray = newOrder[recipients].split(',')
 
-  //mark
-  oldOrder[CONSTANTS.indexes.indexMark] = 0
 
-  //если креатор содержится в реципиентах
-  if (oldOrderRecipientsArray.includes(oldOrder[creator])) {
-    // если реципиент 1 => авторевью
-    if (oldOrderRecipientsArray.length === 1) {
-      // содержится ли креатор в новом ордере 1 или больше т.е проверка на дублирование авторевью
-      if (newOrderRecipientsArray.includes(oldOrder[creator])) {
-        if (newOrderRecipientsArray.length !== 1) {
-          newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
-        }
-      }
-    }
-    // если кто-то рисовал , а после пришел другой с авторевью
-    else {
+
+  // старый ордер
+  if (oldOrderRecipientsArray.length > 1) {
+    newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
+    newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
+  }
+  // старый ордер
+  else if (oldOrderRecipientsArray.length = 1) {
+    // новый ордер
+    if (newOrderRecipientsArray.includes(oldOrderRecipientsArray[0])) {
+
+    } else {
       newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
-
       newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
+      oldOrder[CONSTANTS.indexes.indexSpentTime] = 0
     }
+    oldOrder[recipients] = '' 
+    //mark
+    oldOrder[CONSTANTS.indexes.indexMark] = 0
+  }
+
+  if (!oldOrder[CONSTANTS.indexes.indexReviewSpentTime]) {
     delete orders[order][fpEsx][oldOrder[CONSTANTS.indexes.indexDate]]
     i = 0
     return i
-  }
-  // если креатор не содержится в реципиентах
-  else {
-    // суммировать время только в случе наличия реципиентов
-    if (oldOrder[recipients]) {
-      newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
-      oldOrder[CONSTANTS.indexes.indexSpentTime] = 0
-
-      newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
-      oldOrder[recipients] = ''
-    }
   }
   i++
   return i

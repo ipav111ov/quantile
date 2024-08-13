@@ -1,6 +1,4 @@
 function main() {
-  Logger.log('hello')
-
   const time = moment(new Date()).tz('Asia/Tbilisi').format('ll' + ' LTS')
   const gamification = new Gamification(CONSTANTS.spreadsheet);
   const output = new Output(gamification, time);
@@ -30,7 +28,7 @@ class Gamification {
     const json = JSON.stringify(this.members)
     const blob = Utilities.newBlob(json, 'application/json')
     const file = Drive.Files.create(fileSets, blob)
-    // sendJson(json)
+    sendJson(json)
   }
 
   getMembers() {
@@ -100,7 +98,9 @@ class Gamification {
             for (const orderAsDateString in feedback[drafterUid].orders) {
               const orderAsObject = feedback[drafterUid].orders[orderAsDateString]
 
-              this.orders.push(orderAsDateString)
+              if (!this.orders.includes(orderAsDateString)) {
+                this.orders.push(orderAsDateString)
+              }
 
               if (orderAsObject.type === CONSTANTS.fp || orderAsObject.type === CONSTANTS.esx) {
 
@@ -129,7 +129,7 @@ class Gamification {
                     drafter[converterType].time += Number(orderAsObject.st);
                     drafter[converterType].cameras += Number(orderAsObject.cameras);
                     orderAsObject.recipientArray.length < 2 ? drafter[converterType].ordersSolo++ : drafter[converterType].ordersShared++;
-                    drafter[converterType].square += Formulas.getRounding(orderAsObject.square);
+                    drafter[converterType].square += orderAsObject.square;
                     drafter[converterType].markArray.push(Number(orderAsObject.mark));
                   }
                 }
@@ -146,8 +146,8 @@ class Gamification {
                   throw new Error('!isRecipient && !isCreator')
                 }
 
-                if (!drafter[converterType].ordersArray.includes(orderAsDateString)) {
-                  drafter[converterType].ordersArray.push(orderAsDateString)
+                if (!drafter[converterType].ordersArray.includes(orderAsObject.orderId)) {
+                  drafter[converterType].ordersArray.push(orderAsObject.orderId)
                 }
 
               };
@@ -528,7 +528,7 @@ class Output {
     for (const drafterUid of Object.values(this.gamification.members)) {
       const uid = drafterUid.uid
 
-      const date = this.gamification.orders.at(0);
+      const date = new Date(this.gamification.orders.at(0)).getTime();
       const program = drafterUid.data
 
       // Draw

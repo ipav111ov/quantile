@@ -6,14 +6,30 @@
 </head>
 
 <body>
-  <h1>Нажмите старт, чтобы запустить расчет Gamification</h1>
+  <h1>Запустить расчет Gamification</h1>
+  <br>
   <button id='btn'>Start</button>
+  <h3 id='status'>Не начато</h3>
   <script>
+    const status = document.getElementById('status')
     document.getElementById('btn').addEventListener('click', start)
+  async function start() {
+    try {
+    updateProgressBar('Выполнение...')
+      await google.script.run
+        .withSuccessHandler(() => updateProgressBar('Выполнено'))
+        .withFailureHandler(() => updateProgressBar('Ошибка'))
+        .main()
+    } 
+    catch (e) {
+      updateProgressBar(e)
+    }
+  }
 
-      function start(){
-        google.script.run.main()
-      }
+  function updateProgressBar(text){
+    status.innerHTML = text
+    alert(text)
+  }
   </script>
 </body>
 

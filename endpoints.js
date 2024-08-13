@@ -6,13 +6,15 @@ function doPost(e) {
 
 }
 
+
+
 function sendJson(json) {
   const url = 'https://docusketch.shop/wp-json/ds-shop/record-gamification-data/';
 
   Logger.log('fetching data now...');
 
-  const key = PropertiesService.getScriptProperties('key')
-  
+  const key = PropertiesService.getScriptProperties().getProperty('key')
+
   try {
     let options = {
       'method': 'post',
