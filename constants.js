@@ -326,6 +326,11 @@ class AnotherFunctions {
     return newArray
   };
 
+  static getShortUid(uid = '23-000111') {
+    return Number(uid.replace(/\s+/g, '').substring(3));
+  }
+
+
   static findDuplicates(array) {
     const duplicates = [];
     const seen = {};
@@ -343,4 +348,22 @@ class AnotherFunctions {
     duplicates.length > 0 ? Logger.log(`Обнаружены дубликаты - ${duplicates}`) : Logger.log(`Дупликатов нет`);
     return duplicates;
   };
+  static arraysEqual(cArr1, cArr2) {
+    let arr1 = [...cArr1]
+    let arr2 = [...cArr2]
+    arr1 = cArr1.sort()
+    arr2 = cArr2.sort()
+    if (arr1.length !== arr2.length) {
+      return false;
+    }
+    for (let i = 0; i < arr1.length; i++) {
+      if (arr1[i] !== arr2[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+
+
 }

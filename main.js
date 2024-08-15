@@ -2,6 +2,7 @@ function main() {
   const time = moment(new Date()).tz('Asia/Tbilisi').format('ll' + ' LTS')
   const gamification = new Gamification(CONSTANTS.spreadsheet);
   const output = new Output(gamification, time);
+  output.teamsList
   output.programs
   Logger.log('Completed')
   //TODO 
@@ -13,7 +14,7 @@ class Gamification {
     this.spreadsheet = spreadsheet;
     this.orders = []
     this.members = this.getCalculations(this.getMembers());
-    // this.teams = this.getTeams();
+    this.teams = this.getTeams();
     this.weights = this.getWeights();
     this.arraysForQuantile = this.getArraysForQuantile()
     this.quantileAndPointsProcedure()
@@ -28,7 +29,7 @@ class Gamification {
     const json = JSON.stringify(this.members)
     const blob = Utilities.newBlob(json, 'application/json')
     const file = Drive.Files.create(fileSets, blob)
-    sendJson(json)
+    // sendJson(json)
   }
 
   getMembers() {
@@ -215,17 +216,28 @@ class Gamification {
   getTeams() {
     const sheetName = 'TeamsList';
     Logger.log('Creating teams...');
-    const sheetTeams = ss.getSheetByName(sheetName);
-    const valuesTeams = sheetTeams.getDataRange().getValues().slice(4);
-    const emailsDb = collectEmailsDb();
+    const sheetTeams = CONSTANTS.spreadsheet.getSheetByName(sheetName);
+    const valuesTeams = sheetTeams.getDataRange().getValues().slice(1);
+    // const emailsDb = collectEmailsDb();
 
     const columns = {
       leaderName: 0,
       leaderUid: 1,
-      memberName: 2,
-      memberUid: 3,
+      assistName: 2,
+      assistUid: 3,
+      memberName: 4,
+      memberUid: 5,
+      divisionName: 6,
     };
-    const teams = {};
+    const teams = {}
+    const team = {
+      members: {},
+      division: '',
+      leaderName: '',
+      leaderUid: '',
+      assistName: '',
+      assistUid: '',
+    };
     let currentLeaderUid = "";
     let membersArr = []
 
@@ -236,19 +248,32 @@ class Gamification {
       if (row[columns.leaderUid]) {
         const leaderUid = row[columns.leaderUid]
         currentLeaderUid = leaderUid;
-        teams[currentLeaderUid] = {};
+        teams[currentLeaderUid] = {
+          leaderUid: currentLeaderUid,
+          leaderName: row[columns.leaderName],
+          assistUid: row[columns.assistUid],
+          assistName: row[columns.assistName],
+          members : {},
+          division: row[columns.divisionName]
+        }
       };
       if (row[columns.memberUid]) {
         const memberUid = row[columns.memberUid]
-        teams[currentLeaderUid][memberUid] = emailsDb[memberUid]
+        teams[currentLeaderUid].members[memberUid] = {
+          email: '',
+          name: row[columns.memberName],
+          shortUid: AnotherFunctions.getShortUid(memberUid),
+          longUid: memberUid,
+        }
       }
-    };
+    }
+
     Logger.log('Checking duplicates...')
-    findDuplicates(membersArr)
+    // findDuplicates(membersArr)
     Logger.log('Teams created')
 
     return teams
-  };
+  }
 
   getArraysForQuantile() {
     const array = Factories.typeFactory()
@@ -510,6 +535,7 @@ class Gamification {
 class Output {
   constructor(gamification, time) {
     this.gamification = gamification;
+    this.teams = this.gamification.teams
     this.time = time;
   }
 
@@ -528,7 +554,7 @@ class Output {
     for (const drafterUid of Object.values(this.gamification.members)) {
       const uid = drafterUid.uid
 
-      const date = new Date(this.gamification.orders.at(0)).getTime();
+      const date = new Date(this.gamification.orders.at(0)).getTime()
       const program = drafterUid.data
 
       // Draw
@@ -548,14 +574,41 @@ class Output {
       reviewOutput.push(reviewValues1, reviewValues2, reviewValues3, reviewValues4)
     };
 
-    drawSheet.getDataRange().clear();
-    reviewSheet.getDataRange().clear();
+    drawSheet.getDataRange().clear()
+    reviewSheet.getDataRange().clear()
 
-    drawSheet.getRange(1, 1, drawOutput.length, drawOutput[0].length).setValues(drawOutput);
-    reviewSheet.getRange(1, 1, reviewOutput.length, reviewOutput[0].length).setValues(reviewOutput);
+    drawSheet.getRange(1, 1, drawOutput.length, drawOutput[0].length).setValues(drawOutput)
+    reviewSheet.getRange(1, 1, reviewOutput.length, reviewOutput[0].length).setValues(reviewOutput)
+  }
+
+  get teamsList() {
+    const arrayForWrite = [['memberShortUid', 'managerUid', 'managerRole', 'teamUid', 'managerEmail', 'division', 'leaderName']]
+    for (const teamAsLeaderUid in this.teams) {
+      const leaderShortUid = AnotherFunctions.getShortUid(this.teams[teamAsLeaderUid].leaderUid)
+      const assistShortUid = AnotherFunctions.getShortUid(this.teams[teamAsLeaderUid].assistUid)
+      const managerArray = [leaderShortUid, assistShortUid]
+      for (const manager of managerArray) {
+        for (const memberAsObject in this.teams[teamAsLeaderUid].members) {
+          const memberShortUid = this.teams[teamAsLeaderUid].members[memberAsObject].shortUid
+          const managerUid = manager
+          const managerRole = manager === leaderShortUid ? 'leader' : 'assist'
+          const teamUid = leaderShortUid
+          const managerEmail = this.teams[teamAsLeaderUid].members[memberAsObject].email
+          const division = this.teams[teamAsLeaderUid].division
+          const leaderName = this.teams[teamAsLeaderUid].leaderName
+          arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid, managerEmail, division, leaderName])
+        }
+      }
+    }
+    const sheetNameTeams = 'Teams'
+    if (!CONSTANTS.spreadsheet.getSheetByName(sheetNameTeams)) {
+      CONSTANTS.spreadsheet.insertSheet(sheetNameTeams)
+    }
+    const sheetTeams = CONSTANTS.spreadsheet.getSheetByName(sheetNameTeams)
+    sheetTeams.clear()
+    sheetTeams.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
   }
 }
-
 
 class Member {
   constructor() {

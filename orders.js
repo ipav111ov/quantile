@@ -51,8 +51,8 @@ function filterOrders(orders) {
           const oldOrder = Object.values(orders[order][fpEsx])[i]
           const newOrder = Object.values(orders[order][fpEsx])[i + 1]
 
-          mergeRecipientsProcedure(oldOrder, newOrder, 'uid', orders, order, fpEsx, i)
-          i = mergeRecipientsProcedure(oldOrder, newOrder, '', orders, order, fpEsx, i)
+          mergeOrdersProcedure(oldOrder, newOrder, 'uid', orders, order, fpEsx, i)
+          i = mergeOrdersProcedure(oldOrder, newOrder, '', orders, order, fpEsx, i)
           if (i === 0) {
             continue
           }
@@ -63,7 +63,7 @@ function filterOrders(orders) {
   return orders
 }
 
-function mergeRecipientsProcedure(oldOrder, newOrder, type, orders, order, fpEsx, i) {
+function mergeOrdersProcedure(oldOrder, newOrder, type, orders, order, fpEsx, i) {
   let recipients, creator
   if (type === 'uid') {
     recipients = CONSTANTS.indexes.indexRecipientsUID
@@ -78,25 +78,42 @@ function mergeRecipientsProcedure(oldOrder, newOrder, type, orders, order, fpEsx
 
 
 
-  // старый ордер
+  // старый ордер когда реципиентов много
   if (oldOrderRecipientsArray.length > 1) {
-    newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
-    newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
+    // новый ордер нет реципиентов
+    if (newOrderRecipientsArray.length == 0) {
+      newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
+    }
+    // новый ордер есть 1 реципиент
+    else if (newOrderRecipientsArray.length == 1) {
+      if (oldOrderRecipientsArray.includes(newOrderRecipientsArray.join(''))) {
+        newOrder[CONSTANTS.indexes.indexSpentTime] = oldOrder[CONSTANTS.indexes.indexSpentTime]
+      } else {
+        newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
+      }
+    }
+    // новый ордер реципиентов от 2 
+    else if (newOrderRecipientsArray.length > 1) {
+      if (!AnotherFunctions.arraysEqual(newOrderRecipientsArray, oldOrderRecipientsArray)) {
+        newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
+      }
+    }
   }
-  // старый ордер
+
+  // старый ордер когда реципиент 1              
   else if (oldOrderRecipientsArray.length = 1) {
     // новый ордер
-    if (newOrderRecipientsArray.includes(oldOrderRecipientsArray[0])) {
-
-    } else {
-      newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
+    if (!newOrderRecipientsArray.includes(oldOrderRecipientsArray[0])) {
       newOrder[CONSTANTS.indexes.indexSpentTime] += oldOrder[CONSTANTS.indexes.indexSpentTime]
-      oldOrder[CONSTANTS.indexes.indexSpentTime] = 0
     }
-    oldOrder[recipients] = '' 
-    //mark
-    oldOrder[CONSTANTS.indexes.indexMark] = 0
   }
+  newOrder[recipients] = mergeString(oldOrderRecipientsArray, newOrderRecipientsArray)
+
+  oldOrder[recipients] = ''
+  oldOrder[CONSTANTS.indexes.indexSpentTime] = 0
+
+  //mark
+  oldOrder[CONSTANTS.indexes.indexMark] = 0
 
   if (!oldOrder[CONSTANTS.indexes.indexReviewSpentTime]) {
     delete orders[order][fpEsx][oldOrder[CONSTANTS.indexes.indexDate]]
