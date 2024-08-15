@@ -5,6 +5,9 @@ function getOrders(values) {
     const row = values[indexRow];
     const date = row[CONSTANTS.indexes.indexDate];
     const orderId = row[CONSTANTS.indexes.indexOrderId];
+    if (orderId == '1898627') {
+      console.log('hi')
+    }
     const platform = row[CONSTANTS.indexes.indexPlatform];
     const creator = row[CONSTANTS.indexes.indexCreator];
     const creatorUid = row[CONSTANTS.indexes.indexCreatorUID]
@@ -44,9 +47,13 @@ function getOrders(values) {
 
 function filterOrders(orders) {
   for (const order in orders) {
+    if (order == '1898627') {
+      console.log('hi')
+    }
     for (const fpEsx in orders[order]) {
       if (Object.keys(orders[order][fpEsx].length > 1)) {
         let i = 0
+
         while (i < Object.keys(orders[order][fpEsx]).length - 1) {
           const oldOrder = Object.values(orders[order][fpEsx])[i]
           const newOrder = Object.values(orders[order][fpEsx])[i + 1]

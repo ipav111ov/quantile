@@ -38,6 +38,9 @@ class Gamification {
 
     const members = {};
     for (const order in orders) {
+      if (order == '1898627') {
+        console.log('hi')
+      }
       for (const fpEsx in orders[order]) {
         for (const orderInstance in orders[order][fpEsx]) {
           const feedback = {}
@@ -214,9 +217,9 @@ class Gamification {
   }
 
   getTeams() {
-    const sheetName = 'TeamsList';
+    const sheetName = 'Teams info';
     Logger.log('Creating teams...');
-    const sheetTeams = CONSTANTS.spreadsheet.getSheetByName(sheetName);
+    const sheetTeams = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1bNNxTlfZbEwcz26y_In32__5kEE67Vibq5Vp4DIVfjc/edit?gid=550950070#gid=550950070').getSheetByName(sheetName)
     const valuesTeams = sheetTeams.getDataRange().getValues().slice(1);
     // const emailsDb = collectEmailsDb();
 
@@ -253,14 +256,13 @@ class Gamification {
           leaderName: row[columns.leaderName],
           assistUid: row[columns.assistUid],
           assistName: row[columns.assistName],
-          members : {},
+          members: {},
           division: row[columns.divisionName]
         }
       };
       if (row[columns.memberUid]) {
         const memberUid = row[columns.memberUid]
         teams[currentLeaderUid].members[memberUid] = {
-          email: '',
           name: row[columns.memberName],
           shortUid: AnotherFunctions.getShortUid(memberUid),
           longUid: memberUid,
@@ -582,7 +584,7 @@ class Output {
   }
 
   get teamsList() {
-    const arrayForWrite = [['memberShortUid', 'managerUid', 'managerRole', 'teamUid', 'managerEmail', 'division', 'leaderName']]
+    const arrayForWrite = [['memberShortUid', 'managerUid', 'managerRole', 'teamUid', 'division', 'leaderName']]
     for (const teamAsLeaderUid in this.teams) {
       const leaderShortUid = AnotherFunctions.getShortUid(this.teams[teamAsLeaderUid].leaderUid)
       const assistShortUid = AnotherFunctions.getShortUid(this.teams[teamAsLeaderUid].assistUid)
@@ -593,10 +595,10 @@ class Output {
           const managerUid = manager
           const managerRole = manager === leaderShortUid ? 'leader' : 'assist'
           const teamUid = leaderShortUid
-          const managerEmail = this.teams[teamAsLeaderUid].members[memberAsObject].email
+          // const managerEmail = this.teams[teamAsLeaderUid].members[memberAsObject].email
           const division = this.teams[teamAsLeaderUid].division
           const leaderName = this.teams[teamAsLeaderUid].leaderName
-          arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid, managerEmail, division, leaderName])
+          arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid, division, leaderName])
         }
       }
     }
