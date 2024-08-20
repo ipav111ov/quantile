@@ -1,7 +1,7 @@
 function main() {
   const time = moment(new Date()).tz('Asia/Tbilisi').format('ll' + ' LTS')
-  const gamification = new Gamification(CONSTANTS.spreadsheet);
-  const output = new Output(gamification, time);
+  const gamification = new Gamification(CONSTANTS.spreadsheet)
+  const output = new Output(gamification, time)
   output.teamsList
   output.programs
   Logger.log('Completed')
@@ -25,7 +25,7 @@ class Gamification {
     const fileSets = {
       mimeType: 'application/json',
       name: new Date()
-    };
+    }
     const json = JSON.stringify(this.members)
     const blob = Utilities.newBlob(json, 'application/json')
     const file = Drive.Files.create(fileSets, blob)
@@ -38,9 +38,6 @@ class Gamification {
 
     const members = {};
     for (const order in orders) {
-      if (order == '1898627') {
-        console.log('hi')
-      }
       for (const fpEsx in orders[order]) {
         for (const orderInstance in orders[order][fpEsx]) {
           const feedback = {}
@@ -70,13 +67,13 @@ class Gamification {
               feedback[recipientUid].orders = {};
               feedback[recipientUid].name = recipientsArr[indexRecipient]
             }
-            if (creatorUid.indexOf(recipientUid) == 0 && creatorUid.length == recipientUid.length) {
+            if (recipientUid == creatorUid) {
               feedback[recipientUid].orders[date] = createRecord(date, orderId, platform, type, mark, square, cameras, st, reviewST, true, true, recipientsArrUid, isConverter);
               creatorFlag = true;
             }
-
-            feedback[recipientUid].orders[date] = createRecord(date, orderId, platform, type, mark, square, cameras, st, reviewST, true, false, recipientsArrUid, isConverter);
-
+            else {
+              feedback[recipientUid].orders[date] = createRecord(date, orderId, platform, type, mark, square, cameras, st, reviewST, true, false, recipientsArrUid, isConverter);
+            }
           }
           if (!creatorFlag && creatorUid) {
             if (!feedback[creatorUid]) {
@@ -86,7 +83,6 @@ class Gamification {
 
             }
             feedback[creatorUid].orders[date] = createRecord(date, orderId, platform, type, mark, square, cameras, st, reviewST, false, true, recipientsArrUid, isConverter);
-            feedback[creatorUid].order //todo += reviewST
 
           }
 
@@ -129,12 +125,23 @@ class Gamification {
 
                 if (orderAsObject.isRecipient) {
                   if (orderAsObject.st) {
-
                     drafter[converterType].time += Number(orderAsObject.st);
                     drafter[converterType].cameras += Number(orderAsObject.cameras);
-                    orderAsObject.recipientArray.length < 2 ? drafter[converterType].ordersSolo++ : drafter[converterType].ordersShared++;
+                    if (orderAsObject.recipientArray.length != 0) {
+                      orderAsObject.recipientArray.length < 2 ? drafter[converterType].ordersSolo++ : drafter[converterType].ordersShared++;
+                    }
                     drafter[converterType].square += orderAsObject.square;
                     drafter[converterType].markArray.push(Number(orderAsObject.mark));
+
+                    if (orderAsObject.isCreator && orderAsObject.recipientArray.length > 1) {
+                      converterType = CONSTANTS.quantiles.review
+                      if (orderAsObject.reviewST) {
+                        drafter[converterType].time += Number(orderAsObject.reviewST);
+                        drafter[converterType].ordersTotal++;
+                        drafter[converterType].cameras += Number(orderAsObject.cameras);
+                      }
+
+                    }
                   }
                 }
                 else if (orderAsObject.isCreator && !orderAsObject.isRecipient) {
@@ -154,9 +161,10 @@ class Gamification {
                   drafter[converterType].ordersArray.push(orderAsObject.orderId)
                 }
 
-              };
-            };
-          };
+              }
+            }
+          }
+
         }
       }
     }
@@ -199,14 +207,9 @@ class Gamification {
                 program[converterType].markAverage = Formulas.getAverage(program[converterType].markArray);
 
                 //SOLO_PERCENT
-                let totalSoloOrders = 0;
-                let totalShareOrders = 0;
-
-                for (const converterType1 of [CONSTANTS.converterType.converter, CONSTANTS.converterType.noConverter]) {
-                  totalSoloOrders += program[converterType1].ordersSolo;
-                  totalShareOrders += program[converterType1].ordersShared;
-                };
-                program[converterType].soloPercent = Formulas.getSoloPercent(totalSoloOrders, totalShareOrders);
+                const soloOrders = program[converterType].ordersSolo;
+                const shareOrders = program[converterType].ordersShared;
+                program[converterType].soloPercent = Formulas.getSoloPercent(soloOrders, shareOrders);
               };
             };
           }
@@ -220,8 +223,8 @@ class Gamification {
     const sheetName = 'Teams info';
     Logger.log('Creating teams...');
     const sheetTeams = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1bNNxTlfZbEwcz26y_In32__5kEE67Vibq5Vp4DIVfjc/edit?gid=550950070#gid=550950070').getSheetByName(sheetName)
-    const valuesTeams = sheetTeams.getDataRange().getValues().slice(1);
-    // const emailsDb = collectEmailsDb();
+    const valuesTeams = sheetTeams.getDataRange().getValues().slice(1)
+    // const emailsDb = collectEmailsDb()
 
     const columns = {
       leaderName: 0,
@@ -598,15 +601,16 @@ class Output {
           // const managerEmail = this.teams[teamAsLeaderUid].members[memberAsObject].email
           const division = this.teams[teamAsLeaderUid].division
           const leaderName = this.teams[teamAsLeaderUid].leaderName
-          arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid, division, leaderName])
+          arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid,leaderName,division])
         }
       }
     }
-    const sheetNameTeams = 'Teams'
-    if (!CONSTANTS.spreadsheet.getSheetByName(sheetNameTeams)) {
-      CONSTANTS.spreadsheet.insertSheet(sheetNameTeams)
+    const sheetNameTeams = 'TeamsForDatabase'
+    const spreadsheetTeams = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1bNNxTlfZbEwcz26y_In32__5kEE67Vibq5Vp4DIVfjc/edit?gid=550950070#gid=550950070')
+    if (!spreadsheetTeams.getSheetByName(sheetNameTeams)) {
+      spreadsheetTeams.insertSheet(sheetNameTeams)
     }
-    const sheetTeams = CONSTANTS.spreadsheet.getSheetByName(sheetNameTeams)
+    const sheetTeams = spreadsheetTeams.getSheetByName(sheetNameTeams)
     sheetTeams.clear()
     sheetTeams.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
   }

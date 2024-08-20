@@ -46,97 +46,98 @@ function uploadDataToDbTeams() {
     conn = connectToSql();
     conn.setAutoCommit(false);
 
-    const sheetName = 'Teams'
-    const sheet = CONSTANTS.spreadsheet.getSheetByName(sheetName);
+    const sheetName = 'TeamsForDatabase'
+    const sheet = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1bNNxTlfZbEwcz26y_In32__5kEE67Vibq5Vp4DIVfjc/edit?gid=550950070#gid=550950070').getSheetByName(sheetName)
 
-    // const sheetToLog = ss.getSheetByName('batchSpeedLog');
-    // sheetToLog.clear();
 
-    const lastRowTotal = sheet.getLastRow();
-    const lastColumn = sheet.getLastColumn();
-    let dataIndex = 0;
-    Logger.log('Uploading data...');
+      // const sheetToLog = ss.getSheetByName('batchSpeedLog');
+      // sheetToLog.clear();
 
-    while (dataIndex < lastRowTotal) {
-      let batchSizeCount = 0;
+      const lastRowTotal = sheet.getLastRow();
+      const lastColumn = sheet.getLastColumn();
+      let dataIndex = 0;
+      Logger.log('Uploading data...');
 
-      let startBatch = new Date()
+      while (dataIndex < lastRowTotal) {
+        let batchSizeCount = 0;
 
-      let start = new Date()
-      const currentLastRow = sheet.getLastRow();
-      const logCurrentLastRow = (new Date() - start) / 1000;
+        let startBatch = new Date()
 
-      let data;
-      start = new Date()
-      if (currentLastRow >= batchSize) {
-        data = sheet.getRange((currentLastRow - batchSize) + 1, 1, batchSize, lastColumn).getValues();
-      } else {
-        data = sheet.getRange(2, 1, currentLastRow - 1, lastColumn).getValues();
-        Logger.log('Last batch')
-      }
-      const logValues = (new Date() - start) / 1000;
-      start = new Date()
-      const stmt = conn.prepareStatement('INSERT INTO game_teams (member_short_uid, manager_short_uid, manager_role, team_uid, leader_name,division) VALUES (?, ?, ?, ?, ?, ?)');
-      const logStmt = (new Date() - start) / 1000;
+        let start = new Date()
+        const currentLastRow = sheet.getLastRow();
+        const logCurrentLastRow = (new Date() - start) / 1000;
 
-      while (batchSizeCount <= batchSize && batchSizeCount < data.length) {
+        let data;
+        start = new Date()
+        if (currentLastRow >= batchSize) {
+          data = sheet.getRange((currentLastRow - batchSize) + 1, 1, batchSize, lastColumn).getValues();
+        } else {
+          data = sheet.getRange(2, 1, currentLastRow - 1, lastColumn).getValues();
+          Logger.log('Last batch')
+        }
+        const logValues = (new Date() - start) / 1000;
+        start = new Date()
+        const stmt = conn.prepareStatement('INSERT INTO game_teams (member_short_uid, manager_short_uid, manager_role, team_uid, leader_name,division) VALUES (?, ?, ?, ?, ?, ?)');
+        const logStmt = (new Date() - start) / 1000;
+
+        while (batchSizeCount <= batchSize && batchSizeCount < data.length) {
+
+          start = new Date()
+          addStatementTeams(stmt, data[batchSizeCount]);
+          const logAddStatement = (new Date() - start) / 1000;
+          Logger.log(logAddStatement)
+
+          batchSizeCount++;
+          dataIndex++;
+        }
+        const logBatchTime = (new Date() - start) / 1000;
+
 
         start = new Date()
-        addStatementTeams(stmt, data[batchSizeCount]);
-        const logAddStatement = (new Date() - start) / 1000;
-        Logger.log(logAddStatement)
-
-        batchSizeCount++;
-        dataIndex++;
-      }
-      const logBatchTime = (new Date() - start) / 1000;
+        stmt.executeBatch();
+        const logExecute = (new Date() - start) / 1000;
 
 
-      start = new Date()
-      stmt.executeBatch();
-      const logExecute = (new Date() - start) / 1000;
-
-
-      start = new Date()
-      stmt.close();
-      const logClose = (new Date() - start) / 1000;
-
-
-      start = new Date()
-      conn.commit();
-      const logCommit = (new Date() - start) / 1000;
-
-
-
-      if (data.length >= batchSize) {
         start = new Date()
-        sheet.getRange((currentLastRow - batchSize) + 1, 1, batchSize, lastColumn).clear();
-        const logDelete = (new Date() - start) / 1000;
-        const logUpload = (new Date() - startBatch) / 1000;
-        // sheetToLog.appendRow([logUpload])
-        Logger.log(`${dataIndex} rows uploaded to Database`);
+        stmt.close();
+        const logClose = (new Date() - start) / 1000;
+
+
+        start = new Date()
+        conn.commit();
+        const logCommit = (new Date() - start) / 1000;
+
+
+
+        if (data.length >= batchSize) {
+          start = new Date()
+          sheet.getRange((currentLastRow - batchSize) + 1, 1, batchSize, lastColumn).clear();
+          const logDelete = (new Date() - start) / 1000;
+          const logUpload = (new Date() - startBatch) / 1000;
+          // sheetToLog.appendRow([logUpload])
+          Logger.log(`${dataIndex} rows uploaded to Database`);
+        }
+
+        else {
+          start = new Date()
+          sheet.getRange(2, 1, data.length, lastColumn).clear();
+          const logDelete = (new Date() - start) / 1000;
+          const logUpload = (new Date() - startBatch) / 1000;
+          // sheetToLog.appendRow([logUpload])
+          Logger.log(`${dataIndex} rows uploaded to Database`);
+        }
       }
 
-      else {
-        start = new Date()
-        sheet.getRange(2, 1, data.length, lastColumn).clear();
-        const logDelete = (new Date() - start) / 1000;
-        const logUpload = (new Date() - startBatch) / 1000;
-        // sheetToLog.appendRow([logUpload])
-        Logger.log(`${dataIndex} rows uploaded to Database`);
-      }
+      Logger.log('Feedback uploaded to Database');
     }
-
-    Logger.log('Feedback uploaded to Database');
-  }
   catch (e) {
-    if (conn) {
-      conn.rollback();
-    }
-    Logger.log('Error: ' + e.message);
-  } finally {
-    if (conn) {
-      conn.close();
+      if (conn) {
+        conn.rollback();
+      }
+      Logger.log('Error: ' + e.message);
+    } finally {
+      if (conn) {
+        conn.close();
+      };
     };
   };
-};
