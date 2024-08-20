@@ -50,12 +50,10 @@ function sendJson(json) {
 
 
 function connectToSql() {
-  // const url = PropertiesService.getScriptProperties().getProperty('url')
-  // const user = PropertiesService.getScriptProperties().getProperty('user')
-  // const password = PropertiesService.getScriptProperties().getProperty('pass')
-  const url = 'jdbc:mysql://3kw.5b2.mytemp.website:3306/DocusketchShop'
-  const user = 'Ilia'
-  const password = '(V[X^y0@NIzh'
+  const url = PropertiesService.getScriptProperties().getProperty('url')
+  const user = PropertiesService.getScriptProperties().getProperty('user')
+  const password = PropertiesService.getScriptProperties().getProperty('pass')
+
 
 
   try {
