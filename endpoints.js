@@ -52,10 +52,7 @@ function sendJson(json) {
 function connectToSql() {
   const url = PropertiesService.getScriptProperties().getProperty('url')
   const user = PropertiesService.getScriptProperties().getProperty('user')
-  const password = PropertiesService.getScriptProperties().getProperty('pass')
-
-
-
+  const password = PropertiesService.getScriptProperties().getProperty('password')
   try {
     const connection = Jdbc.getConnection(url, user, password)
     Logger.log('Connected to database')

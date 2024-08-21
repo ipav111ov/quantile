@@ -136,9 +136,9 @@ class Gamification {
                     if (orderAsObject.isCreator && orderAsObject.recipientArray.length > 1) {
                       converterType = CONSTANTS.quantiles.review
                       if (orderAsObject.reviewST) {
-                        drafter[converterType].time += Number(orderAsObject.reviewST);
-                        drafter[converterType].ordersTotal++;
-                        drafter[converterType].cameras += Number(orderAsObject.cameras);
+                        drafter[converterType].time += Number(orderAsObject.reviewST)
+                        drafter[converterType].ordersTotal++
+                        drafter[converterType].cameras += Number(orderAsObject.cameras)
                       }
 
                     }
