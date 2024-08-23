@@ -1,3 +1,7 @@
+const divisionsSheetName = 'Divisions'
+const spreadsheetTeams = CONSTANTS.spredsheetTeams
+const divisionsSheet = CONSTANTS.spredsheetTeams.getSheetByName(divisionsSheetName)
+
 function getDivisions() {
   let connection
   const current_period = 38
@@ -23,12 +27,11 @@ function getDivisions() {
       arrayForWrite.push([long_uid, leader_name, period_id, avg_points, division, place, previous_place, difference])
     }
 
-    const sheetNameTeams = 'Divisions'
-    const spreadsheetTeams = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1bNNxTlfZbEwcz26y_In32__5kEE67Vibq5Vp4DIVfjc/edit?gid=550950070#gid=550950070')
-    if (!spreadsheetTeams.getSheetByName(sheetNameTeams)) {
-      spreadsheetTeams.insertSheet(sheetNameTeams)
+
+    if (!spreadsheetTeams.getSheetByName(divisionsSheetName)) {
+      spreadsheetTeams.insertSheet(divisionsSheetName)
     }
-    const sheetTeams = spreadsheetTeams.getSheetByName(sheetNameTeams)
+    const sheetTeams = spreadsheetTeams.getSheetByName(divisionsSheetName)
     sheetTeams.clear()
     sheetTeams.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
 
@@ -46,4 +49,14 @@ function getDivisions() {
       connection.close()
     }
   }
+}
+
+function uploadToDatabaseDivisions() {
+
+  const copySheetName = divisionsSheet.copyTo(spreadsheetTeams).setName('copyDivisions').getName()
+  copySheet = CONSTANTS.spredsheetTeams.getSheetByName(copySheetName)
+
+  const statement = 'INSERT INTO game_divisions (long_uid, leader_name, cutoff_id, average_points,division, place, previous_place, difference) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  uploadToDatabase(copySheet, statement)
+  spreadsheetTeams.deleteSheet(copySheet)
 }

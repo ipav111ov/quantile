@@ -19,7 +19,7 @@ class Gamification {
     this.arraysForQuantile = this.getArraysForQuantile()
     this.quantileAndPointsProcedure()
     this.json()
-  };
+  }
 
   json() {
     const fileSets = {
@@ -43,7 +43,7 @@ class Gamification {
           const feedback = {}
           const row = orders[order][fpEsx][orderInstance];
           const date = row[CONSTANTS.indexes.indexDate];
-          const orderId = row[CONSTANTS.indexes.indexOrderId];
+          const orderId = parseInt(row[CONSTANTS.indexes.indexOrderId]);
           const platform = row[CONSTANTS.indexes.indexPlatform];
           const creator = row[CONSTANTS.indexes.indexCreator];
           const creatorUid = row[CONSTANTS.indexes.indexCreatorUID]
@@ -53,8 +53,8 @@ class Gamification {
           const mark = row[CONSTANTS.indexes.indexMark];
           const square = row[CONSTANTS.indexes.indexSquare];
           const cameras = row[CONSTANTS.indexes.indexCameras];
-          const st = row[CONSTANTS.indexes.indexSpentTime];
-          const reviewST = row[CONSTANTS.indexes.indexReviewSpentTime];
+          const st = row[CONSTANTS.indexes.indexSpentTime]
+          const reviewST = row[CONSTANTS.indexes.indexReviewSpentTime]
           const recipientsArr = recipients ? recipients.split(',') : [];
           const recipientsArrUid = recipientsUid ? recipientsUid.split(',') : [];
           const isConverter = row[CONSTANTS.indexes.indexConverter];
@@ -133,15 +133,6 @@ class Gamification {
                     drafter[converterType].square += orderAsObject.square;
                     drafter[converterType].markArray.push(Number(orderAsObject.mark));
 
-                    if (orderAsObject.isCreator && orderAsObject.recipientArray.length > 1) {
-                      converterType = CONSTANTS.quantiles.review
-                      if (orderAsObject.reviewST) {
-                        drafter[converterType].time += Number(orderAsObject.reviewST)
-                        drafter[converterType].ordersTotal++
-                        drafter[converterType].cameras += Number(orderAsObject.cameras)
-                      }
-
-                    }
                   }
                 }
                 else if (orderAsObject.isCreator && !orderAsObject.isRecipient) {
@@ -272,9 +263,6 @@ class Gamification {
         }
       }
     }
-
-    Logger.log('Checking duplicates...')
-    // findDuplicates(membersArr)
     Logger.log('Teams created')
 
     return teams
@@ -556,10 +544,12 @@ class Output {
     ]]
 
     // VALUES
+    const dayInMilliseconds = 1000 * 60 * 60 * 24
+    const ts = new Date(this.gamification.orders.at(0)).getTime()
+    const date = (ts - (ts % dayInMilliseconds)) / 1000
+
     for (const drafterUid of Object.values(this.gamification.members)) {
       const uid = drafterUid.uid
-
-      const date = new Date(this.gamification.orders.at(0)).getTime()
       const program = drafterUid.data
 
       // Draw
@@ -593,15 +583,17 @@ class Output {
       const assistShortUid = AnotherFunctions.getShortUid(this.teams[teamAsLeaderUid].assistUid)
       const managerArray = [leaderShortUid, assistShortUid]
       for (const manager of managerArray) {
-        for (const memberAsObject in this.teams[teamAsLeaderUid].members) {
-          const memberShortUid = this.teams[teamAsLeaderUid].members[memberAsObject].shortUid
-          const managerUid = manager
-          const managerRole = manager === leaderShortUid ? 'leader' : 'assist'
-          const teamUid = leaderShortUid
-          // const managerEmail = this.teams[teamAsLeaderUid].members[memberAsObject].email
-          const division = this.teams[teamAsLeaderUid].division
-          const leaderName = this.teams[teamAsLeaderUid].leaderName
-          arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid,leaderName,division])
+        if (manager) {
+          for (const memberAsObject in this.teams[teamAsLeaderUid].members) {
+            const memberShortUid = this.teams[teamAsLeaderUid].members[memberAsObject].shortUid
+            const managerUid = manager
+            const managerRole = manager === leaderShortUid ? 'leader' : 'assist'
+            const teamUid = leaderShortUid
+            // const managerEmail = this.teams[teamAsLeaderUid].members[memberAsObject].email
+            const division = this.teams[teamAsLeaderUid].division
+            const leaderName = this.teams[teamAsLeaderUid].leaderName
+            arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid, leaderName, division])
+          }
         }
       }
     }

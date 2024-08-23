@@ -5,23 +5,16 @@ function getOrders(values) {
     const row = values[indexRow];
     const date = row[CONSTANTS.indexes.indexDate];
     const orderId = row[CONSTANTS.indexes.indexOrderId];
-    if (orderId == '1898627') {
-      console.log('hi')
-    }
-    const platform = row[CONSTANTS.indexes.indexPlatform];
-    const creator = row[CONSTANTS.indexes.indexCreator];
-    const creatorUid = row[CONSTANTS.indexes.indexCreatorUID]
-    const recipients = row[CONSTANTS.indexes.indexRecipients];
-    const recipientsUid = row[CONSTANTS.indexes.indexRecipientsUID];
+
+    row[CONSTANTS.indexes.indexMark] = parseInt(row[CONSTANTS.indexes.indexMark])
+    row[CONSTANTS.indexes.indexSquare] = parseFloat(row[CONSTANTS.indexes.indexSquare])
+    row[CONSTANTS.indexes.indexCameras] = parseInt(row[CONSTANTS.indexes.indexCameras])
+    row[CONSTANTS.indexes.indexSpentTime] = parseInt(row[CONSTANTS.indexes.indexSpentTime])
+    row[CONSTANTS.indexes.indexReviewSpentTime] = parseInt(row[CONSTANTS.indexes.indexReviewSpentTime])
+    row[CONSTANTS.indexes.indexConverter] = parseInt(row[CONSTANTS.indexes.indexConverter])
+
     const type = row[CONSTANTS.indexes.indexType];
-    const mark = row[CONSTANTS.indexes.indexMark];
-    const square = row[CONSTANTS.indexes.indexSquare];
-    const cameras = row[CONSTANTS.indexes.indexCameras];
-    const st = row[CONSTANTS.indexes.indexSpentTime];
-    const reviewST = row[CONSTANTS.indexes.indexReviewSpentTime];
-    const recipientsArr = recipients ? recipients.split(',') : [];
-    const recipientsArrUid = recipientsUid ? recipientsUid.split(',') : [];
-    const isConverter = row[CONSTANTS.indexes.indexConverter];
+
 
     if (!orders[orderId]) {
       orders[orderId] = {}
