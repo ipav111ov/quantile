@@ -6,43 +6,63 @@ function getOrders(values) {
     const date = row[CONSTANTS.indexes.indexDate];
     const orderId = row[CONSTANTS.indexes.indexOrderId];
 
-    row[CONSTANTS.indexes.indexMark] = parseInt(row[CONSTANTS.indexes.indexMark])
-    row[CONSTANTS.indexes.indexSquare] = parseFloat(row[CONSTANTS.indexes.indexSquare])
-    row[CONSTANTS.indexes.indexCameras] = parseInt(row[CONSTANTS.indexes.indexCameras])
-    row[CONSTANTS.indexes.indexSpentTime] = parseInt(row[CONSTANTS.indexes.indexSpentTime])
-    row[CONSTANTS.indexes.indexReviewSpentTime] = parseInt(row[CONSTANTS.indexes.indexReviewSpentTime])
-    row[CONSTANTS.indexes.indexConverter] = parseInt(row[CONSTANTS.indexes.indexConverter])
+    if (!excludeUid(row)) {
 
-    const type = row[CONSTANTS.indexes.indexType];
+      row[CONSTANTS.indexes.indexMark] = parseInt(row[CONSTANTS.indexes.indexMark])
+      row[CONSTANTS.indexes.indexSquare] = parseFloat(row[CONSTANTS.indexes.indexSquare])
+      row[CONSTANTS.indexes.indexCameras] = parseInt(row[CONSTANTS.indexes.indexCameras])
+      row[CONSTANTS.indexes.indexSpentTime] = parseInt(row[CONSTANTS.indexes.indexSpentTime])
+      row[CONSTANTS.indexes.indexReviewSpentTime] = parseInt(row[CONSTANTS.indexes.indexReviewSpentTime])
+      row[CONSTANTS.indexes.indexConverter] = parseInt(row[CONSTANTS.indexes.indexConverter])
+
+      const type = row[CONSTANTS.indexes.indexType]
 
 
-    if (!orders[orderId]) {
-      orders[orderId] = {}
-    }
-    if (!orders[orderId][type]) {
-      orders[orderId][type] = {}
-    }
-    if (!orders[orderId][type][date]) {
-      orders[orderId][type][date] = row
-    }
-    else {
-      const oldDate = orders[orderId][type][date]
-      const newDate = date
-
-      if (new Date(newDate) - new Date(oldDate) >= 0) {
+      if (!orders[orderId]) {
+        orders[orderId] = {}
+      }
+      if (!orders[orderId][type]) {
+        orders[orderId][type] = {}
+      }
+      if (!orders[orderId][type][date]) {
         orders[orderId][type][date] = row
       }
+      else {
+        const oldDate = orders[orderId][type][date]
+        const newDate = date
 
+        if (new Date(newDate) - new Date(oldDate) >= 0) {
+          orders[orderId][type][date] = row
+        }
+
+      }
     }
   }
   return orders
 }
 
+function excludeUid(row) {
+  const excludedUidObject = {
+    '12312': true,
+    '12312': true,
+    '12312': true,
+    '12312': true,
+  }
+
+  const creatorUid = row[CONSTANTS.indexes.indexCreatorUID]
+  const recipientsUidArray = row[CONSTANTS.indexes.indexRecipientsUID].split(',')
+
+  if (!excludedUidObject[creatorUid]) {
+    const found = recipientsUidArray.find(uid => excludeUid[uid] != true)
+    if (!found) {
+      return false
+    }
+  }
+  return true
+}
+
 function filterOrders(orders) {
   for (const order in orders) {
-    if (order == '1898627') {
-      console.log('hi')
-    }
     for (const fpEsx in orders[order]) {
       if (Object.keys(orders[order][fpEsx].length > 1)) {
         let i = 0
@@ -50,6 +70,7 @@ function filterOrders(orders) {
         while (i < Object.keys(orders[order][fpEsx]).length - 1) {
           const oldOrder = Object.values(orders[order][fpEsx])[i]
           const newOrder = Object.values(orders[order][fpEsx])[i + 1]
+
 
           mergeOrdersProcedure(oldOrder, newOrder, 'uid', orders, order, fpEsx, i)
           i = mergeOrdersProcedure(oldOrder, newOrder, '', orders, order, fpEsx, i)

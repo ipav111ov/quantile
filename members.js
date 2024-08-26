@@ -41,7 +41,7 @@ function prepareMembersForDatabase(sheet, originalSheet) {
     const email = keyWords.some(word => row[indexes.corporateEmail].includes(word)) ? 
     row[indexes.corporateEmail] : 
     keyWords.some(word => row[indexes.personalEmail].includes(word)) ? 
-    row[indexes.personalEmail] : 'noEmail'
+    row[indexes.personalEmail] : ''
     const long_uid = row[indexes.memberLongUid]
     
     if (email) {
