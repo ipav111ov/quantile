@@ -1,18 +1,30 @@
 function main() {
-  const time = moment(new Date()).tz('Asia/Tbilisi').format('ll' + ' LTS')
-  const gamification = new Gamification(CONSTANTS.spreadsheet)
-  const output = new Output(gamification, time)
-  output.teamsList
-  output.programs
-  Logger.log('Completed')
-  //TODO 
+  const sheetCutoffDateName = 'cutoffDate'
+  const values = CONSTANTS.spredsheetTeams.getSheetByName(sheetCutoffDateName).getRange('A2:B2').getValues()
+
+  if (values[0][0] && values[0][1]) {
+    const time = {
+      startTs: values[0][0].getTime(),
+      text : `${moment(values[0][0]).format('ll')} - ${moment(values[0][1]).format('ll')}`
+    }
+    const gamification = new Gamification(CONSTANTS.spreadsheet, time)
+    const output = new Output(gamification, time)
+    output.teamsList
+    output.programs
+    Logger.log('Completed')
+    //TODO 
+  }
+  else {
+    // Browser.msgBox("выбирите даты cutoff")
+  }
 }
 
 
 class Gamification {
-  constructor(spreadsheet) {
+  constructor(spreadsheet,time ) {
     this.spreadsheet = spreadsheet;
     this.orders = []
+    this.time = time
     this.members = this.getCalculations(this.getMembers());
     this.teams = this.getTeams();
     this.weights = this.getWeights();
@@ -170,7 +182,8 @@ class Gamification {
         for (const normalBig of CONSTANTS.normalBigKeysList) {
 
           const program = drafterUid.data[fpEsx][normalBig];
-          drafterUid.dateStart = new Date(this.orders.at(0)).getTime()
+          drafterUid.dateStart = this.time.startTs
+          drafterUid.dateText = this.time.text
 
           //SPEED
           let time, cameras
@@ -544,26 +557,22 @@ class Output {
     ]]
 
     // VALUES
-    const dayInMilliseconds = 1000 * 60 * 60 * 24
-    const ts = new Date(this.gamification.orders.at(0)).getTime()
-    const date = (ts - (ts % dayInMilliseconds)) / 1000
-
     for (const drafterUid of Object.values(this.gamification.members)) {
       const uid = drafterUid.uid
       const program = drafterUid.data
 
       // Draw
-      const drawValues1 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.fpNormalNoConv, program[CONSTANTS.fp][CONSTANTS.normal], 'noConverter'))
-      const drawValues2 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.fpBigNoConv, program[CONSTANTS.fp][CONSTANTS.big], 'noConverter'))
-      const drawValues3 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.esxNormalConv, program[CONSTANTS.esx][CONSTANTS.normal], 'converter'))
-      const drawValues4 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.esxBigConv, program[CONSTANTS.esx][CONSTANTS.big], 'converter'))
-      const drawValues5 = Object.values(Factories.drawOutputFactory(uid, date, CONSTANTS.weights.esxNormalNoConv, program[CONSTANTS.esx][CONSTANTS.normal], 'noConverter'))
+      const drawValues1 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.fpNormalNoConv, program[CONSTANTS.fp][CONSTANTS.normal], 'noConverter'))
+      const drawValues2 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.fpBigNoConv, program[CONSTANTS.fp][CONSTANTS.big], 'noConverter'))
+      const drawValues3 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.esxNormalConv, program[CONSTANTS.esx][CONSTANTS.normal], 'converter'))
+      const drawValues4 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.esxBigConv, program[CONSTANTS.esx][CONSTANTS.big], 'converter'))
+      const drawValues5 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.esxNormalNoConv, program[CONSTANTS.esx][CONSTANTS.normal], 'noConverter'))
 
       // Review
-      const reviewValues1 = Object.values(Factories.reviewOutputFactory(uid, date, 'fp_normal', program[CONSTANTS.fp][CONSTANTS.normal]))
-      const reviewValues2 = Object.values(Factories.reviewOutputFactory(uid, date, 'fp_big', program[CONSTANTS.fp][CONSTANTS.big]))
-      const reviewValues3 = Object.values(Factories.reviewOutputFactory(uid, date, 'esx_normal', program[CONSTANTS.esx][CONSTANTS.normal]))
-      const reviewValues4 = Object.values(Factories.reviewOutputFactory(uid, date, 'esx_big', program[CONSTANTS.esx][CONSTANTS.big]))
+      const reviewValues1 = Object.values(Factories.reviewOutputFactory(uid, this.time.startTs, 'fp_normal', program[CONSTANTS.fp][CONSTANTS.normal]))
+      const reviewValues2 = Object.values(Factories.reviewOutputFactory(uid, this.time.startTs, 'fp_big', program[CONSTANTS.fp][CONSTANTS.big]))
+      const reviewValues3 = Object.values(Factories.reviewOutputFactory(uid, this.time.startTs, 'esx_normal', program[CONSTANTS.esx][CONSTANTS.normal]))
+      const reviewValues4 = Object.values(Factories.reviewOutputFactory(uid, this.time.startTs, 'esx_big', program[CONSTANTS.esx][CONSTANTS.big]))
 
       drawOutput.push(drawValues1, drawValues2, drawValues3, drawValues4, drawValues5)
       reviewOutput.push(reviewValues1, reviewValues2, reviewValues3, reviewValues4)
