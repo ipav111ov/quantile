@@ -1,6 +1,6 @@
 function uploadToDatabaseMembers() {
   const sheetNameMembers = 'users_ver3'
-  const spreadsheetMembers = CONSTANTS.spreadsheetMembers
+  const spreadsheetMembers = CONSTANTS.speadsheetControlPanel
   const sheetMembers = spreadsheetMembers.getSheetByName(sheetNameMembers)
   let copySheet
   try {
@@ -8,7 +8,7 @@ function uploadToDatabaseMembers() {
     if (!spreadsheetMembers.getSheetByName(copySheetName)) {
       spreadsheetMembers.insertSheet(copySheetName)
     }
-    copySheet = CONSTANTS.spreadsheetMembers.getSheetByName(copySheetName)
+    copySheet = spreadsheetMembers.getSheetByName(copySheetName)
     prepareMembersForDatabase(copySheet, sheetMembers)
     const statement = 'REPLACE INTO game_members (short_uid, full_name, corporate_email, long_uid) VALUES (?,?,?,?)'
     uploadToDatabase(copySheet, statement)

@@ -1,13 +1,10 @@
 function main() {
-  const sheetCutoffDateName = 'cutoffDate'
-  const values = CONSTANTS.spredsheetTeams.getSheetByName(sheetCutoffDateName).getRange('A2:B2').getValues()
+  const sheetCutoffDateName = 'main'
+  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName(sheetCutoffDateName).getRange('B2').getValue()
 
-  if (values[0][0] && values[0][1]) {
-    const time = {
-      startTs: values[0][0].getTime(),
-      text : `${moment(values[0][0]).format('ll')} - ${moment(values[0][1]).format('ll')}`
-    }
-    const gamification = new Gamification(CONSTANTS.spreadsheet, time)
+  if (cutoffId) {
+    const time = cutoffId
+    const gamification = new Gamification(CONSTANTS.speadsheetControlPanel, time)
     const output = new Output(gamification, time)
     output.teamsList
     output.programs
@@ -15,13 +12,13 @@ function main() {
     //TODO 
   }
   else {
-    // Browser.msgBox("выбирите даты cutoff")
+    // Browser.msgBox("выбирите дату cutoff")
   }
 }
 
 
 class Gamification {
-  constructor(spreadsheet,time ) {
+  constructor(spreadsheet, time) {
     this.spreadsheet = spreadsheet;
     this.orders = []
     this.time = time
@@ -36,7 +33,7 @@ class Gamification {
   json() {
     const fileSets = {
       mimeType: 'application/json',
-      name: new Date()
+      name: moment().tz('Asia/Tbilisi').format('DD MMM YYYY HH:mm:ss')
     }
     const json = JSON.stringify(this.members)
     const blob = Utilities.newBlob(json, 'application/json')
@@ -150,10 +147,11 @@ class Gamification {
                 else if (orderAsObject.isCreator && !orderAsObject.isRecipient) {
                   converterType = CONSTANTS.quantiles.review
                   if (orderAsObject.reviewST) {
-
-                    drafter[converterType].time += Number(orderAsObject.reviewST);
-                    drafter[converterType].ordersTotal++;
-                    drafter[converterType].cameras += Number(orderAsObject.cameras);
+                    drafter[converterType].time += Number(orderAsObject.reviewST)
+                    if (!drafter[converterType].ordersArray.includes(orderAsObject.orderId)) {
+                    drafter[converterType].ordersTotal++
+                    drafter[converterType].cameras += Number(orderAsObject.cameras)
+                    }
                   }
                 }
                 else {
@@ -171,6 +169,16 @@ class Gamification {
         }
       }
     }
+    const excludedUidObject = {}
+    const valuesExcludedUid = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getDataRange().getValues().slice(1).flat(1)
+    for (const uid of valuesExcludedUid) {
+      excludedUidObject[uid] = true
+    }
+    for (const uidToDelete in excludedUidObject) {
+      if (members[uidToDelete]) {
+        delete members[uidToDelete]
+      }
+    }
     this.orders.sort((a, b) => new Date(a) - new Date(b))
     return members
   }
@@ -182,8 +190,7 @@ class Gamification {
         for (const normalBig of CONSTANTS.normalBigKeysList) {
 
           const program = drafterUid.data[fpEsx][normalBig];
-          drafterUid.dateStart = this.time.startTs
-          drafterUid.dateText = this.time.text
+          drafterUid.cutoffId = this.time
 
           //SPEED
           let time, cameras
@@ -226,7 +233,7 @@ class Gamification {
   getTeams() {
     const sheetName = 'Teams info';
     Logger.log('Creating teams...');
-    const sheetTeams = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1bNNxTlfZbEwcz26y_In32__5kEE67Vibq5Vp4DIVfjc/edit?gid=550950070#gid=550950070').getSheetByName(sheetName)
+    const sheetTeams = this.spreadsheet.getSheetByName(sheetName)
     const valuesTeams = sheetTeams.getDataRange().getValues().slice(1)
     // const emailsDb = collectEmailsDb()
 
@@ -367,7 +374,7 @@ class Gamification {
       return obj
     }
 
-    const sheetWeights = CONSTANTS.spreadsheet.getSheetByName('weights')
+    const sheetWeights = this.spreadsheet.getSheetByName('weights')
     const reviewWeights = sheetWeights.getRange('A1:E5').getValues().slice(1)
     const drawWeights = sheetWeights.getRange('A7:F12').getValues().slice(1)
     let obj = {
@@ -411,8 +418,8 @@ class Gamification {
             }
             if (fpEsx === CONSTANTS.fp && normalBig === CONSTANTS.big) {
               let group = CONSTANTS.weights.fpBigNoConv
-
               switch (drawReview) {
+                // сделать так чтобы квантиль был 0 для драфетров только для солоперцент
                 case CONSTANTS.quantiles.draw:
                   converterType = CONSTANTS.converterType.noConverter
                   this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, group)
@@ -450,6 +457,7 @@ class Gamification {
             if (fpEsx === CONSTANTS.esx && normalBig === CONSTANTS.big) {
               let group = CONSTANTS.weights.esxBigConv
               switch (drawReview) {
+                // сделать так чтобы квантиль был 0 для драфетров только для солоперцент
                 case CONSTANTS.quantiles.draw:
                   converterType = CONSTANTS.converterType.converter
                   this.getQuantileAndPlace(drafter, converterType, drawReviewObj, weights, drawReview, group)
@@ -547,13 +555,13 @@ class Output {
 
   get programs() {
 
-    const drawSheet = CONSTANTS.spreadsheet.getSheetByName(CONSTANTS.quantiles.draw)
-    const reviewSheet = CONSTANTS.spreadsheet.getSheetByName(CONSTANTS.quantiles.review)
+    const drawSheet = this.gamification.spreadsheet.getSheetByName('draw')
+    const reviewSheet = this.gamification.spreadsheet.getSheetByName('review')
     let drawOutput = [[
-      'uid', 'date', 'type', 'orders', 'cameras', 'mark_avg', 'solo_orders', 'spent_time', 'solo_percent', 'speed', 'orders_quantile', 'cameras_quantile', 'mark_quantile', 'solo_percent_quantile', 'speed_quantile', 'orders_points', 'cameras_points', 'mark_points', 'solo_percent_points', 'speed_points', 'total_points',
+      'uid', 'cutoff_id', 'type', 'orders', 'cameras', 'mark_avg', 'solo_orders', 'spent_time', 'solo_percent', 'speed', 'orders_quantile', 'cameras_quantile', 'mark_quantile', 'solo_percent_quantile', 'speed_quantile', 'orders_points', 'cameras_points', 'mark_points', 'solo_percent_points', 'speed_points', 'total_points',
     ]]
     let reviewOutput = [[
-      'uid', 'date', 'type', 'orders', 'cameras', 'spent_time', 'speed', 'orders_quantile', 'cameras_quantile', 'speed_quantile', 'orders_points', 'cameras_points', 'speed_points', 'total_points',
+      'uid', 'cutoff_id', 'type', 'orders', 'cameras', 'spent_time', 'speed', 'orders_quantile', 'cameras_quantile', 'speed_quantile', 'orders_points', 'cameras_points', 'speed_points', 'total_points',
     ]]
 
     // VALUES
@@ -562,17 +570,17 @@ class Output {
       const program = drafterUid.data
 
       // Draw
-      const drawValues1 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.fpNormalNoConv, program[CONSTANTS.fp][CONSTANTS.normal], 'noConverter'))
-      const drawValues2 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.fpBigNoConv, program[CONSTANTS.fp][CONSTANTS.big], 'noConverter'))
-      const drawValues3 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.esxNormalConv, program[CONSTANTS.esx][CONSTANTS.normal], 'converter'))
-      const drawValues4 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.esxBigConv, program[CONSTANTS.esx][CONSTANTS.big], 'converter'))
-      const drawValues5 = Object.values(Factories.drawOutputFactory(uid, this.time.startTs, CONSTANTS.weights.esxNormalNoConv, program[CONSTANTS.esx][CONSTANTS.normal], 'noConverter'))
+      const drawValues1 = Object.values(Factories.drawOutputFactory(uid, this.time, CONSTANTS.weights.fpNormalNoConv, program[CONSTANTS.fp][CONSTANTS.normal], 'noConverter'))
+      const drawValues2 = Object.values(Factories.drawOutputFactory(uid, this.time, CONSTANTS.weights.fpBigNoConv, program[CONSTANTS.fp][CONSTANTS.big], 'noConverter'))
+      const drawValues3 = Object.values(Factories.drawOutputFactory(uid, this.time, CONSTANTS.weights.esxNormalConv, program[CONSTANTS.esx][CONSTANTS.normal], 'converter'))
+      const drawValues4 = Object.values(Factories.drawOutputFactory(uid, this.time, CONSTANTS.weights.esxBigConv, program[CONSTANTS.esx][CONSTANTS.big], 'converter'))
+      const drawValues5 = Object.values(Factories.drawOutputFactory(uid, this.time, CONSTANTS.weights.esxNormalNoConv, program[CONSTANTS.esx][CONSTANTS.normal], 'noConverter'))
 
       // Review
-      const reviewValues1 = Object.values(Factories.reviewOutputFactory(uid, this.time.startTs, 'fp_normal', program[CONSTANTS.fp][CONSTANTS.normal]))
-      const reviewValues2 = Object.values(Factories.reviewOutputFactory(uid, this.time.startTs, 'fp_big', program[CONSTANTS.fp][CONSTANTS.big]))
-      const reviewValues3 = Object.values(Factories.reviewOutputFactory(uid, this.time.startTs, 'esx_normal', program[CONSTANTS.esx][CONSTANTS.normal]))
-      const reviewValues4 = Object.values(Factories.reviewOutputFactory(uid, this.time.startTs, 'esx_big', program[CONSTANTS.esx][CONSTANTS.big]))
+      const reviewValues1 = Object.values(Factories.reviewOutputFactory(uid, this.time, 'fp_normal', program[CONSTANTS.fp][CONSTANTS.normal]))
+      const reviewValues2 = Object.values(Factories.reviewOutputFactory(uid, this.time, 'fp_big', program[CONSTANTS.fp][CONSTANTS.big]))
+      const reviewValues3 = Object.values(Factories.reviewOutputFactory(uid, this.time, 'esx_normal', program[CONSTANTS.esx][CONSTANTS.normal]))
+      const reviewValues4 = Object.values(Factories.reviewOutputFactory(uid, this.time, 'esx_big', program[CONSTANTS.esx][CONSTANTS.big]))
 
       drawOutput.push(drawValues1, drawValues2, drawValues3, drawValues4, drawValues5)
       reviewOutput.push(reviewValues1, reviewValues2, reviewValues3, reviewValues4)
@@ -607,11 +615,10 @@ class Output {
       }
     }
     const sheetNameTeams = 'TeamsForDatabase'
-    const spreadsheetTeams = SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1bNNxTlfZbEwcz26y_In32__5kEE67Vibq5Vp4DIVfjc/edit?gid=550950070#gid=550950070')
-    if (!spreadsheetTeams.getSheetByName(sheetNameTeams)) {
-      spreadsheetTeams.insertSheet(sheetNameTeams)
+    if (!this.gamification.spreadsheet.getSheetByName(sheetNameTeams)) {
+      this.gamification.spreadsheet.insertSheet(sheetNameTeams)
     }
-    const sheetTeams = spreadsheetTeams.getSheetByName(sheetNameTeams)
+    const sheetTeams = this.gamification.spreadsheet.getSheetByName(sheetNameTeams)
     sheetTeams.clear()
     sheetTeams.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
   }

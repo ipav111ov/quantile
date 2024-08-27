@@ -1,6 +1,6 @@
 const divisionsSheetName = 'Divisions'
-const spreadsheetTeams = CONSTANTS.spredsheetTeams
-const divisionsSheet = CONSTANTS.spredsheetTeams.getSheetByName(divisionsSheetName)
+const spreadsheetTeams = CONSTANTS.speadsheetControlPanel
+const divisionsSheet = spreadsheetTeams.getSheetByName(divisionsSheetName)
 
 function getDivisions() {
   let connection
@@ -52,10 +52,8 @@ function getDivisions() {
 }
 
 function uploadToDatabaseDivisions() {
-
   const copySheetName = divisionsSheet.copyTo(spreadsheetTeams).setName('copyDivisions').getName()
   copySheet = CONSTANTS.spredsheetTeams.getSheetByName(copySheetName)
-  const cutoffStart = SpreadsheetApp.getUi()
   const statement = 'INSERT INTO game_divisions (long_uid, leader_name, cutoff_id, average_points,division, place, previous_place, difference) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   uploadToDatabase(copySheet, statement)
   spreadsheetTeams.deleteSheet(copySheet)

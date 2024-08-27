@@ -6,55 +6,47 @@ function getOrders(values) {
     const date = row[CONSTANTS.indexes.indexDate];
     const orderId = row[CONSTANTS.indexes.indexOrderId];
 
-    if (!excludeUid(row)) {
+    row[CONSTANTS.indexes.indexMark] = parseInt(row[CONSTANTS.indexes.indexMark])
+    row[CONSTANTS.indexes.indexSquare] = parseFloat(row[CONSTANTS.indexes.indexSquare])
+    row[CONSTANTS.indexes.indexCameras] = parseInt(row[CONSTANTS.indexes.indexCameras])
+    row[CONSTANTS.indexes.indexSpentTime] = parseInt(row[CONSTANTS.indexes.indexSpentTime])
+    row[CONSTANTS.indexes.indexReviewSpentTime] = parseInt(row[CONSTANTS.indexes.indexReviewSpentTime])
+    row[CONSTANTS.indexes.indexConverter] = parseInt(row[CONSTANTS.indexes.indexConverter])
 
-      row[CONSTANTS.indexes.indexMark] = parseInt(row[CONSTANTS.indexes.indexMark])
-      row[CONSTANTS.indexes.indexSquare] = parseFloat(row[CONSTANTS.indexes.indexSquare])
-      row[CONSTANTS.indexes.indexCameras] = parseInt(row[CONSTANTS.indexes.indexCameras])
-      row[CONSTANTS.indexes.indexSpentTime] = parseInt(row[CONSTANTS.indexes.indexSpentTime])
-      row[CONSTANTS.indexes.indexReviewSpentTime] = parseInt(row[CONSTANTS.indexes.indexReviewSpentTime])
-      row[CONSTANTS.indexes.indexConverter] = parseInt(row[CONSTANTS.indexes.indexConverter])
-
-      const type = row[CONSTANTS.indexes.indexType]
+    const type = row[CONSTANTS.indexes.indexType]
 
 
-      if (!orders[orderId]) {
-        orders[orderId] = {}
-      }
-      if (!orders[orderId][type]) {
-        orders[orderId][type] = {}
-      }
-      if (!orders[orderId][type][date]) {
+    if (!orders[orderId]) {
+      orders[orderId] = {}
+    }
+    if (!orders[orderId][type]) {
+      orders[orderId][type] = {}
+    }
+    if (!orders[orderId][type][date]) {
+      orders[orderId][type][date] = row
+    }
+    else {
+      const oldDate = orders[orderId][type][date]
+      const newDate = date
+
+      if (new Date(newDate) - new Date(oldDate) >= 0) {
         orders[orderId][type][date] = row
       }
-      else {
-        const oldDate = orders[orderId][type][date]
-        const newDate = date
 
-        if (new Date(newDate) - new Date(oldDate) >= 0) {
-          orders[orderId][type][date] = row
-        }
-
-      }
     }
   }
   return orders
 }
 
-function excludeUid(row) {
-  const excludedUidObject = {
-    '12312': true,
-    '12312': true,
-    '12312': true,
-    '12312': true,
-  }
+
+function excludeUid(row, excludedUidObject) {
 
   const creatorUid = row[CONSTANTS.indexes.indexCreatorUID]
   const recipientsUidArray = row[CONSTANTS.indexes.indexRecipientsUID].split(',')
 
   if (!excludedUidObject[creatorUid]) {
-    const found = recipientsUidArray.find(uid => excludeUid[uid] != true)
-    if (!found) {
+    const found = recipientsUidArray.find(uid => excludedUidObject[uid] == true)
+    if (!Boolean(found)) {
       return false
     }
   }
