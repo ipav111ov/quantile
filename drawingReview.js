@@ -1,15 +1,13 @@
 function main() {
-  const sheetCutoffDateName = 'main'
-  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName(sheetCutoffDateName).getRange('B2').getValue()
+  Logger.log('Calculating points...')
+  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('B2').getValue()
 
   if (cutoffId) {
     const time = cutoffId
     const gamification = new Gamification(CONSTANTS.speadsheetControlPanel, time)
     const output = new Output(gamification, time)
-    output.teamsList
     output.programs
-    Logger.log('Completed')
-    //TODO 
+    Logger.log('Points calculated')
   }
   else {
     // Browser.msgBox("выбирите дату cutoff")
@@ -23,7 +21,6 @@ class Gamification {
     this.orders = []
     this.time = time
     this.members = this.getCalculations(this.getMembers());
-    this.teams = this.getTeams();
     this.weights = this.getWeights();
     this.arraysForQuantile = this.getArraysForQuantile()
     this.quantileAndPointsProcedure()
@@ -38,7 +35,7 @@ class Gamification {
     const json = JSON.stringify(this.members)
     const blob = Utilities.newBlob(json, 'application/json')
     const file = Drive.Files.create(fileSets, blob)
-    // sendJson(json)
+    sendJson(json)
   }
 
   getMembers() {
@@ -149,8 +146,8 @@ class Gamification {
                   if (orderAsObject.reviewST) {
                     drafter[converterType].time += Number(orderAsObject.reviewST)
                     if (!drafter[converterType].ordersArray.includes(orderAsObject.orderId)) {
-                    drafter[converterType].ordersTotal++
-                    drafter[converterType].cameras += Number(orderAsObject.cameras)
+                      drafter[converterType].ordersTotal++
+                      drafter[converterType].cameras += Number(orderAsObject.cameras)
                     }
                   }
                 }
@@ -179,7 +176,7 @@ class Gamification {
         delete members[uidToDelete]
       }
     }
-    this.orders.sort((a, b) => new Date(a) - new Date(b))
+    // this.orders.sort((a, b) => new Date(a) - new Date(b))
     return members
   }
 
@@ -221,71 +218,13 @@ class Gamification {
                 const soloOrders = program[converterType].ordersSolo;
                 const shareOrders = program[converterType].ordersShared;
                 program[converterType].soloPercent = Formulas.getSoloPercent(soloOrders, shareOrders);
-              };
-            };
+              }
+            }
           }
-        };
-      };
-    };
-    return members;
-  }
-
-  getTeams() {
-    const sheetName = 'Teams info';
-    Logger.log('Creating teams...');
-    const sheetTeams = this.spreadsheet.getSheetByName(sheetName)
-    const valuesTeams = sheetTeams.getDataRange().getValues().slice(1)
-    // const emailsDb = collectEmailsDb()
-
-    const columns = {
-      leaderName: 0,
-      leaderUid: 1,
-      assistName: 2,
-      assistUid: 3,
-      memberName: 4,
-      memberUid: 5,
-      divisionName: 6,
-    };
-    const teams = {}
-    const team = {
-      members: {},
-      division: '',
-      leaderName: '',
-      leaderUid: '',
-      assistName: '',
-      assistUid: '',
-    };
-    let currentLeaderUid = "";
-    let membersArr = []
-
-    for (const row of valuesTeams) {
-      if (row[columns.leaderName] === 'Total' || row[columns.leaderName] === 'Total Included') {
-        continue
-      };
-      if (row[columns.leaderUid]) {
-        const leaderUid = row[columns.leaderUid]
-        currentLeaderUid = leaderUid;
-        teams[currentLeaderUid] = {
-          leaderUid: currentLeaderUid,
-          leaderName: row[columns.leaderName],
-          assistUid: row[columns.assistUid],
-          assistName: row[columns.assistName],
-          members: {},
-          division: row[columns.divisionName]
-        }
-      };
-      if (row[columns.memberUid]) {
-        const memberUid = row[columns.memberUid]
-        teams[currentLeaderUid].members[memberUid] = {
-          name: row[columns.memberName],
-          shortUid: AnotherFunctions.getShortUid(memberUid),
-          longUid: memberUid,
         }
       }
     }
-    Logger.log('Teams created')
-
-    return teams
+    return members
   }
 
   getArraysForQuantile() {
@@ -549,7 +488,6 @@ class Gamification {
 class Output {
   constructor(gamification, time) {
     this.gamification = gamification;
-    this.teams = this.gamification.teams
     this.time = time;
   }
 
@@ -591,36 +529,6 @@ class Output {
 
     drawSheet.getRange(1, 1, drawOutput.length, drawOutput[0].length).setValues(drawOutput)
     reviewSheet.getRange(1, 1, reviewOutput.length, reviewOutput[0].length).setValues(reviewOutput)
-  }
-
-  get teamsList() {
-    const arrayForWrite = [['memberShortUid', 'managerUid', 'managerRole', 'teamUid', 'division', 'leaderName']]
-    for (const teamAsLeaderUid in this.teams) {
-      const leaderShortUid = AnotherFunctions.getShortUid(this.teams[teamAsLeaderUid].leaderUid)
-      const assistShortUid = AnotherFunctions.getShortUid(this.teams[teamAsLeaderUid].assistUid)
-      const managerArray = [leaderShortUid, assistShortUid]
-      for (const manager of managerArray) {
-        if (manager) {
-          for (const memberAsObject in this.teams[teamAsLeaderUid].members) {
-            const memberShortUid = this.teams[teamAsLeaderUid].members[memberAsObject].shortUid
-            const managerUid = manager
-            const managerRole = manager === leaderShortUid ? 'leader' : 'assist'
-            const teamUid = leaderShortUid
-            // const managerEmail = this.teams[teamAsLeaderUid].members[memberAsObject].email
-            const division = this.teams[teamAsLeaderUid].division
-            const leaderName = this.teams[teamAsLeaderUid].leaderName
-            arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid, leaderName, division])
-          }
-        }
-      }
-    }
-    const sheetNameTeams = 'TeamsForDatabase'
-    if (!this.gamification.spreadsheet.getSheetByName(sheetNameTeams)) {
-      this.gamification.spreadsheet.insertSheet(sheetNameTeams)
-    }
-    const sheetTeams = this.gamification.spreadsheet.getSheetByName(sheetNameTeams)
-    sheetTeams.clear()
-    sheetTeams.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
   }
 }
 

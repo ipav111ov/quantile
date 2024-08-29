@@ -1,29 +1,13 @@
-function uploadToDatabaseMembers() {
-  const sheetNameMembers = 'users_ver3'
-  const spreadsheetMembers = CONSTANTS.speadsheetControlPanel
-  const sheetMembers = spreadsheetMembers.getSheetByName(sheetNameMembers)
-  let copySheet
-  try {
-    const copySheetName = 'membersForDatabase'
-    if (!spreadsheetMembers.getSheetByName(copySheetName)) {
-      spreadsheetMembers.insertSheet(copySheetName)
-    }
-    copySheet = spreadsheetMembers.getSheetByName(copySheetName)
-    prepareMembersForDatabase(copySheet, sheetMembers)
-    const statement = 'REPLACE INTO game_members (short_uid, full_name, corporate_email, long_uid) VALUES (?,?,?,?)'
-    uploadToDatabase(copySheet, statement)
-  }
-  catch (e) {
-    Logger.log(e.message)
-  }
-  finally {
-    spreadsheetMembers.deleteSheet(copySheet)
-  }
-
+const spreadsheetMembers = CONSTANTS.speadsheetControlPanel
+const emplannerSheet = spreadsheetMembers.getSheetByName('users_ver3')
+if (!spreadsheetMembers.getSheetByName('membersForDatabase')) {
+  spreadsheetMembers.insertSheet('membersForDatabase')
 }
+membersSheet = spreadsheetMembers.getSheetByName('membersForDatabase')
 
-function prepareMembersForDatabase(sheet, originalSheet) {
-  const values = originalSheet.getDataRange().getValues().slice(1)
+function prepareMembersForDatabase() {
+  Logger.log('Preparing members...')
+  const values = emplannerSheet.getDataRange().getValues().slice(1)
   const indexes = {
     memberLongUid: 0,
     firstName: 1,
@@ -38,17 +22,28 @@ function prepareMembersForDatabase(sheet, originalSheet) {
   for (const row of values) {
     const short_uid = AnotherFunctions.getShortUid(row[indexes.memberLongUid])
     const full_name = `${row[indexes.firstName]} ${row[indexes.lastName]}`
-    const email = keyWords.some(word => row[indexes.corporateEmail].includes(word)) ? 
-    row[indexes.corporateEmail] : 
-    keyWords.some(word => row[indexes.personalEmail].includes(word)) ? 
-    row[indexes.personalEmail] : ''
+    const email = keyWords.some(word => row[indexes.corporateEmail].includes(word)) ?
+      row[indexes.corporateEmail] :
+      keyWords.some(word => row[indexes.personalEmail].includes(word)) ?
+        row[indexes.personalEmail] : ''
     const long_uid = row[indexes.memberLongUid]
-    
+
     if (email) {
       arrayForWrite.push([short_uid, full_name, email, long_uid])
     }
   }
-  sheet.clear()
-  sheet.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
+  membersSheet.clear()
+  membersSheet.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
+  Logger.log('Members prepared')
 }
+
+
+function uploadToDatabaseMembers() {
+  Logger.log('Uploading members to database...')
+  const statement = 'REPLACE INTO game_members (short_uid, full_name, corporate_email, long_uid) VALUES (?,?,?,?)'
+  uploadToDatabase(membersSheet, statement)
+  Logger.log('Members uploaded')
+}
+
+
 

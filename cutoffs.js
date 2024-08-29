@@ -1,15 +1,15 @@
-const cutoffsSheetName = 'CutoffsForDatabase'
 const cutoffSelectorSheetName = 'cutoffSelector'
 const spreadsheetCutoffs = CONSTANTS.speadsheetControlPanel
-const sheet = spreadsheetCutoffs.getSheetByName(cutoffsSheetName)
+const sheet = spreadsheetCutoffs.getSheetByName('CutoffsForDatabase')
 const cutoffSelectorSheet = spreadsheetCutoffs.getSheetByName(cutoffSelectorSheetName)
 
 function createCutoffs() {
+  Logger.log('Creating cutoffs...')
   const arrayForWrite = [['id', 'timestamp', 'name']]
   let startDate = moment().month('June').startOf('month')
   const format = 'DD MMM YYYY'
 
-  for (let i = 1; i <= 15; i = i + 2) {
+  for (let i = 1; i <= 30; i = i + 2) {
     const startCutoff1 = moment(startDate).format(format)
     const startCutoff1Timestamp = moment(startCutoff1).valueOf()
     const endCutoff1 = moment(startDate).add(14, 'days').format(format)
@@ -24,14 +24,19 @@ function createCutoffs() {
   }
   sheet.clear()
   sheet.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
+  Logger.log('Cutoffs created')
+
 }
 
 function uploadToDatabaseCutoffs() {
+  Logger.log('Uploading cutoffs...')
   const statement = 'REPLACE INTO game_cutoffs (id, timestamp, name) VALUES (?, ?, ?)'
   uploadToDatabase(sheet, statement)
+  Logger.log('Cutoffs uploaded')
 }
 
 function getCutoffs() {
+  Logger.log('Fetching cutoffs...')
   let connection
   const arrayForWrite = []
   const now = moment().valueOf()
@@ -45,7 +50,7 @@ function getCutoffs() {
       const id = result.getInt('id')
       const timestamp = parseInt(result.getBigDecimal('timestamp').toSource())
       const name = result.getString('name')
-      arrayForWrite.push([name, id, timestamp ])
+      arrayForWrite.push([name, id, timestamp])
     }
     if (!spreadsheetCutoffs.getSheetByName(cutoffSelectorSheetName)) {
       spreadsheetCutoffs.insertSheet(cutoffSelectorSheetName)
@@ -55,6 +60,7 @@ function getCutoffs() {
 
     stmt.close()
     connection.commit()
+    Logger.log('Cutoffs recieved')
   }
   catch (e) {
     if (connection) {

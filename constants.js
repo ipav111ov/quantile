@@ -103,43 +103,6 @@ class Formulas {
       quantile: (copyArr.length - copyArr.indexOf(number)) / copyArr.length || 0
     }
   }
-
-  // static getQuantile(arr, number, type, ordersQuantile) {
-  //   let [copyArr, result] = [[...arr], 0]
-  //   const [moreIsBetter, lessIsBetter] = [['orders', 'cameras', 'mark', 'soloPercent'], ['speed']]
-  //   let upIndex = copyArr.filter(num => num >= number)
-  //   const lowIndex = copyArr.filter(num => num <= number)
-
-  //   if (arr.includes(number)) {
-  //     switch (type) {
-  //       case 'speed':
-  //         if (ordersQuantile) {
-  //           copyArr = copyArr.sort((a, b) => b - a)
-  //           upIndex = copyArr.filter(num => num >= number)
-  //           result = upIndex.length / copyArr.length
-  //           break;
-  //         }
-  //         else {
-  //           return 0
-  //         }
-  //       case 'soloPercent':
-  //         if (ordersQuantile) {
-  //           result = lowIndex.length / copyArr.length
-  //           break;
-  //         }
-  //         else {
-  //           return 0
-  //         }
-  //       default:
-  //         result = lowIndex.length / copyArr.length
-  //         break;
-  //     }
-  //   }
-  //   else {
-  //     return 0
-  //   }
-  //   return result
-  // }
 }
 
 class Factories {
