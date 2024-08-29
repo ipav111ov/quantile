@@ -1,4 +1,4 @@
-function main() {
+function calculatePoints() {
   Logger.log('Calculating points...')
   const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('B2').getValue()
 
@@ -166,14 +166,17 @@ class Gamification {
         }
       }
     }
-    const excludedUidObject = {}
-    const valuesExcludedUid = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getDataRange().getValues().slice(1).flat(1)
-    for (const uid of valuesExcludedUid) {
-      excludedUidObject[uid] = true
-    }
-    for (const uidToDelete in excludedUidObject) {
-      if (members[uidToDelete]) {
-        delete members[uidToDelete]
+    const isExclude = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getRange('B2').getValue()
+    if (isExclude) {
+      const excludedUidObject = {}
+      const valuesExcludedUid = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getDataRange().getValues().slice(1).flat(1)
+      for (const uid of valuesExcludedUid) {
+        excludedUidObject[uid] = true
+      }
+      for (const uidToDelete in excludedUidObject) {
+        if (members[uidToDelete]) {
+          delete members[uidToDelete]
+        }
       }
     }
     // this.orders.sort((a, b) => new Date(a) - new Date(b))
@@ -187,7 +190,7 @@ class Gamification {
         for (const normalBig of CONSTANTS.normalBigKeysList) {
 
           const program = drafterUid.data[fpEsx][normalBig];
-          drafterUid.cutoffId = this.time
+          drafterUid.cutoff_id = this.time
 
           //SPEED
           let time, cameras
@@ -449,8 +452,12 @@ class Gamification {
         const { place: spPlace, places: spPlaces, quantile: spQuantile } = Formulas.getPlace(typeObj[group].soloPercent, drafter[converterType].soloPercent)
         drafter[converterType].soloPercentPlace = spPlace
         drafter[converterType].soloPercentPlaces = spPlaces
-        drafter[converterType].soloPercentQuantile = spQuantile
-
+        if (group == 'esx_big_conv' || group == 'fp_big_noConv') {
+          drafter[converterType].soloPercentQuantile = 0
+        }
+        else {
+          drafter[converterType].soloPercentQuantile = spQuantile
+        }
         let soloPercentQuantile = drafter[converterType].soloPercentQuantile
         let soloPercentWeight = weights[type][group].solo
         drafter[converterType].soloPercentPoints = soloPercentQuantile * soloPercentWeight

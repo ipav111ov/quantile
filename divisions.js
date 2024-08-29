@@ -5,13 +5,13 @@ const divisionsSheet = spreadsheetTeams.getSheetByName(divisionsSheetName)
 function getDivisions() {
   Logger.log('Creating divisions...')
   let connection
-  const current_period = 38
-  const previous_period = 36
+  const current_period = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('B2').getValue()
+  const previous_period = current_period - 1
   const arrayForWrite = [['long_uid', 'leader_name', 'period', 'avg_points', 'division', 'place', 'previous_place', 'difference']]
   try {
     connection = connectToSql();
     connection.setAutoCommit(false);
-    const stmt = connection.prepareStatement(`CALL getDivisions(?,?)`)
+    const stmt = connection.prepareStatement(`CALL get_Divisions_Sandbox(?,?)`)
     stmt.setInt(1, current_period)
     stmt.setInt(2, previous_period)
 
@@ -56,10 +56,7 @@ function getDivisions() {
 
 function uploadToDatabaseDivisions() {
   Logger.log('Uploading divisions...')
-  const copySheetName = divisionsSheet.copyTo(spreadsheetTeams).setName('copyDivisions').getName()
-  copySheet = CONSTANTS.spredsheetTeams.getSheetByName(copySheetName)
   const statement = 'INSERT INTO game_divisions (long_uid, leader_name, cutoff_id, average_points,division, place, previous_place, difference) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-  uploadToDatabase(copySheet, statement)
-  spreadsheetTeams.deleteSheet(copySheet)
+  uploadToDatabase(divisionsSheet, statement)
   Logger.log('Divisions Uploaded')
 }

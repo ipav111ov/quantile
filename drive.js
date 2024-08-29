@@ -5,12 +5,12 @@ function getValuesFromSS() {
   const files = folder.getFiles();
   let result = [];
   while (files.hasNext()) {
-    const file = files.next();
+    const file = files.next()
     let currentValues = SpreadsheetApp.openById(file.getId()).getSheets()[0].getDataRange().getValues()
     currentValues = currentValues[1][0] == '' ? currentValues.slice(2) : currentValues.slice(1)
     result = result.concat(currentValues)
   }
-  return result;
+  return result
 }
 
 

@@ -7,7 +7,8 @@ function doPost(e) {
 }
 
 function sendJson(json) {
-  const url = 'https://docusketch.shop/wp-json/ds-shop/record-gamification-data/';
+  const url = 'https://docusketch.shop/wp-json/ds-shop/record-gamification-data/' // docusketchShop
+  // const url = 'https://sandbox3.docusketch.shop/wp-json/ds-shop/record-gamification-data/' // sandbox3
 
   Logger.log('fetching data now...');
 
@@ -22,25 +23,20 @@ function sendJson(json) {
       'muteHttpExceptions': true
     };
 
-    let response = UrlFetchApp.fetch(url, options);
-    let responseCode = response.getResponseCode();
-    let responseBody = response.getContentText();
+    let response = UrlFetchApp.fetch(url, options)
+    let responseCode = response.getResponseCode()
+    let responseBody = response.getContentText()
 
     if (responseCode >= 200 && responseCode < 300) {
-      let data = JSON.parse(responseBody);
-      Logger.log(data);
-
-      // Example: Do something with the response data
-      if (data.status === 'success') {
-        Logger.log(data.message);
-      } else {
+      let data = JSON.parse(responseBody)
+      if (!ata.status != 'success') {
         Logger.log('API call failed');
       }
     } else {
       throw new Error('Not ok ' + responseBody);
     }
   } catch (error) {
-    Logger.log('There has been a problem with your fetch operation: ' + error);
+    Logger.log('There has been a problem with your fetch operation: ' + error)
   }
 }
 
@@ -150,7 +146,7 @@ function uploadToDatabase(sheet, statement) {
       }
     }
 
-    Logger.log('Feedback uploaded to Database');
+    Logger.log('Uploaded to Database');
   }
   catch (e) {
     if (connection) {

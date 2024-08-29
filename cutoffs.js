@@ -7,18 +7,18 @@ function createCutoffs() {
   Logger.log('Creating cutoffs...')
   const arrayForWrite = [['id', 'timestamp', 'name']]
   let startDate = moment().month('June').startOf('month')
-  const format = 'DD MMM YYYY'
+  const format = 'DD.MM.YY'
 
   for (let i = 1; i <= 30; i = i + 2) {
-    const startCutoff1 = moment(startDate).format(format)
+    const startCutoff1 = moment(startDate)
     const startCutoff1Timestamp = moment(startCutoff1).valueOf()
-    const endCutoff1 = moment(startDate).add(14, 'days').format(format)
+    const endCutoff1 = moment(startDate).add(14, 'days')
 
-    const startCutoff2 = moment(startDate).add(15, 'days').format(format)
+    const startCutoff2 = moment(startDate).add(15, 'days')
     const startCutoff2Timestamp = moment(startCutoff2).valueOf()
-    const endCutoff2 = moment(startDate).endOf('month').format(format)
+    const endCutoff2 = moment(startDate).endOf('month')
 
-    arrayForWrite.push([i, startCutoff1Timestamp, `${startCutoff1} - ${endCutoff1}`], [i + 1, startCutoff2Timestamp, `${startCutoff2} - ${endCutoff2}`])
+    arrayForWrite.push([i, startCutoff1Timestamp, `${startCutoff1.format(format)} - ${endCutoff1.format(format)}`], [i + 1, startCutoff2Timestamp, `${startCutoff2.format(format)} - ${endCutoff2.format(format)}`])
 
     startDate = startDate.add(1, 'month')
   }
@@ -43,7 +43,7 @@ function getCutoffs() {
   try {
     connection = connectToSql();
     connection.setAutoCommit(false);
-    const stmt = connection.prepareStatement(`SELECT * FROM game_cutoffs WHERE timestamp <= ${now} ORDER BY id DESC LIMIT 5;`)
+    const stmt = connection.prepareStatement(`SELECT * FROM game_cutoffs WHERE timestamp <= ${now} ORDER BY id DESC;`)
 
     const result = stmt.executeQuery()
     while (result.next()) {
