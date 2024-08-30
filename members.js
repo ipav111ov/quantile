@@ -1,13 +1,6 @@
-const spreadsheetMembers = CONSTANTS.speadsheetControlPanel
-const emplannerSheet = spreadsheetMembers.getSheetByName('users_ver3')
-if (!spreadsheetMembers.getSheetByName('membersForDatabase')) {
-  spreadsheetMembers.insertSheet('membersForDatabase')
-}
-membersSheet = spreadsheetMembers.getSheetByName('membersForDatabase')
-
 function prepareMembersForDatabase() {
   Logger.log('Preparing members...')
-  const values = emplannerSheet.getDataRange().getValues().slice(1)
+  const values = spreadsheetMembers.getSheetByName('users_ver3').getDataRange().getValues().slice(1)
   const indexes = {
     memberLongUid: 0,
     firstName: 1,
@@ -32,15 +25,21 @@ function prepareMembersForDatabase() {
       arrayForWrite.push([short_uid, full_name, email, long_uid])
     }
   }
-  membersSheet.clear()
-  membersSheet.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
-  Logger.log('Members prepared')
+  return arrayForWrite
+}
+
+function outputMembers() {
+  const arrayForWrite = prepareMembersForDatabase()
+  const sheetName = 'membersForDatabase'
+  const ss = CONSTANTS.speadsheetControlPanel
+  pasteToSheet(arrayForWrite, sheetName, ss)
 }
 
 
 function uploadToDatabaseMembers() {
   Logger.log('Uploading members to database...')
   const statement = 'REPLACE INTO game_members (short_uid, full_name, corporate_email, long_uid) VALUES (?,?,?,?)'
+  const membersSheet = CONSTANTS.speadsheetControlPanel.getSheetByName('membersForDatabase')
   uploadToDatabase(membersSheet, statement)
   Logger.log('Members uploaded')
 }

@@ -9,8 +9,8 @@ function getDivisions() {
   const previous_period = current_period - 1
   const arrayForWrite = [['long_uid', 'leader_name', 'period', 'avg_points', 'division', 'place', 'previous_place', 'difference']]
   try {
-    connection = connectToSql();
-    connection.setAutoCommit(false);
+    connection = connectToSql()
+    connection.setAutoCommit(false)
     const stmt = connection.prepareStatement(`CALL get_Divisions_Sandbox(?,?)`)
     stmt.setInt(1, current_period)
     stmt.setInt(2, previous_period)
@@ -28,18 +28,10 @@ function getDivisions() {
       arrayForWrite.push([long_uid, leader_name, period_id, avg_points, division, place, previous_place, difference])
     }
 
-
-    if (!spreadsheetTeams.getSheetByName(divisionsSheetName)) {
-      spreadsheetTeams.insertSheet(divisionsSheetName)
-    }
-    const sheetTeams = spreadsheetTeams.getSheetByName(divisionsSheetName)
-    sheetTeams.clear()
-    sheetTeams.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
-
     stmt.close()
     connection.commit()
     Logger.log('Divisions created')
-
+    return arrayForWrite
   }
   catch (e) {
     if (connection) {
@@ -52,6 +44,13 @@ function getDivisions() {
       connection.close()
     }
   }
+}
+
+function outputDivisions() {
+  const arrayForWrite = getDivisions()
+  const sheetName = 'Divisions'
+  const ss = CONSTANTS.speadsheetControlPanel
+  pasteToSheet(arrayForWrite, sheetName, ss)
 }
 
 function uploadToDatabaseDivisions() {

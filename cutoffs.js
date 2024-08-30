@@ -22,10 +22,14 @@ function createCutoffs() {
 
     startDate = startDate.add(1, 'month')
   }
-  sheet.clear()
-  sheet.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
-  Logger.log('Cutoffs created')
+  return arrayForWrite
+}
 
+function outputCutoffs() {
+  const arrayForWrite = createCutoffs()
+  const sheetName = 'CutoffsForDatabase'
+  const ss = CONSTANTS.speadsheetControlPanel
+  pasteToSheet(arrayForWrite, sheetName, ss)
 }
 
 function uploadToDatabaseCutoffs() {
@@ -35,7 +39,7 @@ function uploadToDatabaseCutoffs() {
   Logger.log('Cutoffs uploaded')
 }
 
-function getCutoffs() {
+function getCutoffsFromDatabase() {
   Logger.log('Fetching cutoffs...')
   let connection
   const arrayForWrite = []
@@ -52,15 +56,10 @@ function getCutoffs() {
       const name = result.getString('name')
       arrayForWrite.push([name, id, timestamp])
     }
-    if (!spreadsheetCutoffs.getSheetByName(cutoffSelectorSheetName)) {
-      spreadsheetCutoffs.insertSheet(cutoffSelectorSheetName)
-    }
-    cutoffSelectorSheet.clear()
-    cutoffSelectorSheet.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
-
     stmt.close()
     connection.commit()
     Logger.log('Cutoffs recieved')
+    return arrayForWrite
   }
   catch (e) {
     if (connection) {
@@ -73,4 +72,11 @@ function getCutoffs() {
       connection.close()
     }
   }
+}
+
+function outputCutoffSelector() {
+  const arrayForWrite = getCutoffsFromDatabase()
+  const sheetName = 'cutoffSelector'
+  const ss = CONSTANTS.speadsheetControlPanel
+  pasteToSheet(arrayForWrite, sheetName, ss)
 }

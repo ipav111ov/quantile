@@ -17,16 +17,9 @@ function createTeams() {
     memberUid: 5,
     divisionName: 6,
     managerEmail: 7,
-  };
+  }
   const teams = {}
-  const team = {
-    members: {},
-    division: '',
-    leaderName: '',
-    leaderUid: '',
-    assistName: '',
-    assistUid: '',
-  };
+
   let currentLeaderUid = "";
 
   for (const row of valuesTeams) {
@@ -35,7 +28,7 @@ function createTeams() {
     };
     if (row[columns.leaderUid]) {
       const leaderUid = row[columns.leaderUid]
-      currentLeaderUid = leaderUid;
+      currentLeaderUid = leaderUid.trim();
       teams[currentLeaderUid] = {
         leaderUid: currentLeaderUid,
         leaderName: row[columns.leaderName],
@@ -46,7 +39,7 @@ function createTeams() {
       }
     };
     if (row[columns.memberUid]) {
-      const memberUid = row[columns.memberUid]
+      const memberUid = row[columns.memberUid].trim()
       teams[currentLeaderUid].members[memberUid] = {
         name: row[columns.memberName],
         shortUid: AnotherFunctions.getShortUid(memberUid),
@@ -54,7 +47,11 @@ function createTeams() {
       }
     }
   }
+  return teams
+}
 
+function prepareTeamsForDatabase() {
+  const teams = createTeams()
   const arrayForWrite = [['memberShortUid', 'managerUid', 'managerRole', 'teamUid', 'division', 'leaderName', 'managerEmail']]
   for (const teamAsLeaderUid in teams) {
     const leaderShortUid = AnotherFunctions.getShortUid(teams[teamAsLeaderUid].leaderUid)
@@ -75,14 +72,14 @@ function createTeams() {
       }
     }
   }
-  if (!CONSTANTS.speadsheetControlPanel.getSheetByName('TeamsForDatabase')) {
-    CONSTANTS.speadsheetControlPanel.insertSheet('TeamsForDatabase')
-  }
-  const sheetTeams = CONSTANTS.speadsheetControlPanel.getSheetByName('TeamsForDatabase')
-  sheetTeams.clear()
-  sheetTeams.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
+  return arrayForWrite
+}
 
-  Logger.log('Teams created')
+function outputTeams() {
+  const arrayForWrite = prepareTeamsForDatabase()
+  const sheetName = 'TeamsForDatabase'
+  const ss = CONSTANTS.speadsheetControlPanel
+  pasteToSheet(arrayForWrite, sheetName, ss)
 }
 
 function uploadToDatabaseTeams() {

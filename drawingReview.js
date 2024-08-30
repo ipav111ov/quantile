@@ -166,10 +166,10 @@ class Gamification {
         }
       }
     }
-    const isExclude = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getRange('B2').getValue()
+    const isExclude = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getRange('A2').getValue()
     if (isExclude) {
       const excludedUidObject = {}
-      const valuesExcludedUid = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getDataRange().getValues().slice(1).flat(1)
+      const valuesExcludedUid = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getDataRange().getValues().slice(3).flat(1)
       for (const uid of valuesExcludedUid) {
         excludedUidObject[uid] = true
       }
