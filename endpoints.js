@@ -164,7 +164,7 @@ function pasteToSheet(arrayForWrite, sheetName, spreadsheet) {
   if (!spreadsheet.getSheetByName(sheetName)) {
     spreadsheet.insertSheet(sheetName)
   }
-  const sheetTeams = spreadsheet.getSheetByName(sheetName)
-  sheetTeams.clear()
-  sheetTeams.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
+  const sheet = spreadsheet.getSheetByName(sheetName)
+  sheet.clear()
+  sheet.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
 }

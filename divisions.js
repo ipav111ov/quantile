@@ -2,12 +2,26 @@ const divisionsSheetName = 'Divisions'
 const spreadsheetTeams = CONSTANTS.speadsheetControlPanel
 const divisionsSheet = spreadsheetTeams.getSheetByName(divisionsSheetName)
 
+function getPlayingTeams() {
+  const values = CONSTANTS.speadsheetControlPanel.getSheetByName('Playing Teams').getDataRange().getValues().slice(1)
+  const playingTeams = {}
+  for (const row of values) {
+    playingTeams[row[0]] = true
+  }
+  return playingTeams
+}
+
+
 function getDivisions() {
   Logger.log('Creating divisions...')
   let connection
-  const current_period = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('B2').getValue()
-  const previous_period = current_period - 1
-  const arrayForWrite = [['long_uid', 'leader_name', 'period', 'avg_points', 'division', 'place', 'previous_place', 'difference']]
+  const current_period = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D6').getValue()
+  const previous_period = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D21').getValue()
+  if (!current_period || !previous_period){
+    Browser.msgBox("Выбирите предыдущий cutoff")
+  }
+  const arrayForWrite = [['long_uid', 'leader_name', 'period', 'avg_points', 'division', 'place', 'previous_place', 'difference', 'is_playing']]
+  const playingTeams = getPlayingTeams()
   try {
     connection = connectToSql()
     connection.setAutoCommit(false)
@@ -25,7 +39,14 @@ function getDivisions() {
       const place = result.getInt('place')
       const previous_place = result.getInt('previous_place')
       const difference = result.getInt('difference')
-      arrayForWrite.push([long_uid, leader_name, period_id, avg_points, division, place, previous_place, difference])
+      let isPlaying
+      if (playingTeams[long_uid]) {
+        isPlaying = 1
+      }
+      else {
+        isPlaying = 0
+      }
+      arrayForWrite.push([long_uid, leader_name, period_id, avg_points, division, place, previous_place, difference, isPlaying])
     }
 
     stmt.close()
@@ -55,7 +76,7 @@ function outputDivisions() {
 
 function uploadToDatabaseDivisions() {
   Logger.log('Uploading divisions...')
-  const statement = 'INSERT INTO game_divisions (long_uid, leader_name, cutoff_id, average_points,division, place, previous_place, difference) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  const statement = 'INSERT INTO game_divisions (long_uid, leader_name, cutoff_id, average_points,division, place, previous_place, difference, is_playing) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
   uploadToDatabase(divisionsSheet, statement)
   Logger.log('Divisions Uploaded')
 }

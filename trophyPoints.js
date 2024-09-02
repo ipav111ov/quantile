@@ -1,10 +1,10 @@
 function createLeaderList() {
-  const leaders = createTeams()
+  const values = CONSTANTS.speadsheetControlPanel.getSheetByName('Playing Teams').getDataRange().getValues().slice(1)
   const arrayForWrite = [['leader', 'leader name', 'points']]
 
-  for (const leaderAsUid in leaders) {
-    const leader = leaders[leaderAsUid].leaderUid
-    const leaderName = leaders[leaderAsUid].leaderName
+  for (const row of values) {
+    const leader = row[0]
+    const leaderName = row[1]
     const points = ''
     arrayForWrite.push([leader, leaderName, points])
   }
@@ -36,11 +36,12 @@ function getTrophyPoints() {
 
 function createTrophyPointsForDatabase() {
   const trophyPoints = getTrophyPoints();
-  const teams = createTeams()
+  let teams = createTeams()
   const arrayForWrite = [['cutoff_id', 'short_uid', 'points', 'name', 'source']]
-  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('B5').getValue()
+  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D33').getValue()
 
   for (const teamAsLeaderUid in teams) {
+    
     for (const memberAsObject in teams[teamAsLeaderUid].members) {
       const memberShortUid = teams[teamAsLeaderUid].members[memberAsObject].shortUid
       const points = trophyPoints[teamAsLeaderUid]
@@ -60,6 +61,7 @@ function outputTrophyPoints() {
 }
 
 function uploadToDatabaseTrophyPoints() {
+  outputTrophyPoints()
   const sheet = CONSTANTS.speadsheetControlPanel.getSheetByName('Trophy Points For Database')
   const statement = 'INSERT INTO game_extras (cutoff_id, short_uid, points, name, source) VALUES (?,?,?,?,?)'
   uploadToDatabase(sheet, statement)

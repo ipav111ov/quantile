@@ -15,20 +15,19 @@ function getManagerPoints() {
     const period = row[indexes.period]
     const avgPoints = row[indexes.avgPoints]
     divisions[shortUid] = {
-      cutoffId: period,
       longUid: longUid,
       points: avgPoints,
     }
   }
   const teams = createTeams()
   const arrayForWrite = [['cutoff_id', 'short_uid', 'points', 'name', 'source']]
+  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D33').getValue()
   for (const teamAsLeaderUid in teams) {
     const leaderShortUid = AnotherFunctions.getShortUid(teams[teamAsLeaderUid].leaderUid)
     const assistShortUid = AnotherFunctions.getShortUid(teams[teamAsLeaderUid].assistUid)
     const managerArray = [leaderShortUid, assistShortUid]
     for (const manager of managerArray) {
       if (manager) {
-        const cutoffId = divisions[leaderShortUid].cutoffId
         const points = manager === leaderShortUid ?
           divisions[leaderShortUid].points * leaderCoof :
           divisions[leaderShortUid].points * assistCoof
@@ -49,6 +48,7 @@ function outputManagerPoints() {
 }
 
 function uploadToDatabaseManagerPoints() {
+  outputManagerPoints()
   const sheet = CONSTANTS.speadsheetControlPanel.getSheetByName('Team manager Points For Database')
   const statement = 'INSERT INTO game_extras (cutoff_id, short_uid, points, name, source) VALUES (?,?,?,?,?)'
   uploadToDatabase(sheet, statement)

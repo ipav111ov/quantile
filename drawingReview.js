@@ -1,6 +1,6 @@
 function calculatePoints() {
   Logger.log('Calculating points...')
-  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('B2').getValue()
+  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D6').getValue()
 
   if (cutoffId) {
     const time = cutoffId
@@ -10,7 +10,7 @@ function calculatePoints() {
     Logger.log('Points calculated')
   }
   else {
-    // Browser.msgBox("выбирите дату cutoff")
+    Browser.msgBox("Выбирите cutoff для points")
   }
 }
 
