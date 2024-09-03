@@ -85,7 +85,7 @@ function outputTeams() {
 function uploadToDatabaseTeams() {
   Logger.log('Uploading teams to database...')
   const sheet = CONSTANTS.speadsheetControlPanel.getSheetByName('TeamsForDatabase')
-  const statement = 'INSERT INTO game_teams (member_short_uid, manager_short_uid, manager_role, team_uid,leader_name,division, manager_email) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  const statement = 'REPLACE INTO game_teams (member_short_uid, manager_short_uid, manager_role, team_uid,leader_name,division, manager_email) VALUES (?, ?, ?, ?, ?, ?, ?)'
   uploadToDatabase(sheet, statement)
   Logger.log('Teams uploaded')
 }

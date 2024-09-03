@@ -7,6 +7,7 @@ function calculatePoints() {
     const gamification = new Gamification(CONSTANTS.speadsheetControlPanel, time)
     const output = new Output(gamification, time)
     output.programs
+    sendJson(gamification.json)
     Logger.log('Points calculated')
   }
   else {
@@ -24,7 +25,7 @@ class Gamification {
     this.weights = this.getWeights();
     this.arraysForQuantile = this.getArraysForQuantile()
     this.quantileAndPointsProcedure()
-    this.json()
+    this.json = this.json()
   }
 
   json() {
@@ -33,9 +34,11 @@ class Gamification {
       name: moment().tz('Asia/Tbilisi').format('DD MMM YYYY HH:mm:ss')
     }
     const json = JSON.stringify(this.members)
-    const blob = Utilities.newBlob(json, 'application/json')
-    const file = Drive.Files.create(fileSets, blob)
-    sendJson(json)
+    // const blob = Utilities.newBlob(json, 'application/json')
+    // const file = Drive.Files.create(fileSets, blob)
+    // sendJson(json)
+    return json
+
   }
 
   getMembers() {

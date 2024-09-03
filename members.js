@@ -1,6 +1,6 @@
 function prepareMembersForDatabase() {
   Logger.log('Preparing members...')
-  const values = spreadsheetMembers.getSheetByName('users_ver3').getDataRange().getValues().slice(1)
+  const values = CONSTANTS.speadsheetControlPanel.getSheetByName('users_ver3').getDataRange().getValues().slice(1)
   const indexes = {
     memberLongUid: 0,
     firstName: 1,
@@ -37,6 +37,7 @@ function outputMembers() {
 
 
 function uploadToDatabaseMembers() {
+  outputMembers()
   Logger.log('Uploading members to database...')
   const statement = 'REPLACE INTO game_members (short_uid, full_name, corporate_email, long_uid) VALUES (?,?,?,?)'
   const membersSheet = CONSTANTS.speadsheetControlPanel.getSheetByName('membersForDatabase')

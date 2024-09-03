@@ -36,19 +36,25 @@ function getTrophyPoints() {
 
 function createTrophyPointsForDatabase() {
   const trophyPoints = getTrophyPoints();
-  let teams = createTeams()
+  const teams = createTeams()
+  const playingTeams = getPlayingTeams()
   const arrayForWrite = [['cutoff_id', 'short_uid', 'points', 'name', 'source']]
   const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D33').getValue()
-
-  for (const teamAsLeaderUid in teams) {
-    
-    for (const memberAsObject in teams[teamAsLeaderUid].members) {
-      const memberShortUid = teams[teamAsLeaderUid].members[memberAsObject].shortUid
-      const points = trophyPoints[teamAsLeaderUid]
-      const name = 'next playoff'
-      const source = 'trophy points'
-      arrayForWrite.push([cutoffId, memberShortUid, points, name, source])
+  if (cutoffId) {
+    for (const teamAsLeaderUid in teams) {
+      if (playingTeams[teamAsLeaderUid]) {
+        for (const memberAsObject in teams[teamAsLeaderUid].members) {
+          const memberShortUid = teams[teamAsLeaderUid].members[memberAsObject].shortUid
+          const points = trophyPoints[teamAsLeaderUid] || 0
+          const name = 'next playoff'
+          const source = 'trophy points'
+          arrayForWrite.push([cutoffId, memberShortUid, points, name, source])
+        }
+      }
     }
+  }
+  else {
+    Browser.msgBox('Выбирите cutoff для дополнительных очков')
   }
   return arrayForWrite
 }
@@ -63,6 +69,7 @@ function outputTrophyPoints() {
 function uploadToDatabaseTrophyPoints() {
   outputTrophyPoints()
   const sheet = CONSTANTS.speadsheetControlPanel.getSheetByName('Trophy Points For Database')
-  const statement = 'INSERT INTO game_extras (cutoff_id, short_uid, points, name, source) VALUES (?,?,?,?,?)'
+  const statement = 'REPLACE INTO game_extras (cutoff_id, short_uid, points, name, source) VALUES (?,?,?,?,?)'
   uploadToDatabase(sheet, statement)
+  Browser.msgBox('Trophy Очки загружены в БД')
 }

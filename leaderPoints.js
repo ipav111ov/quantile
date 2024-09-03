@@ -50,6 +50,7 @@ function outputManagerPoints() {
 function uploadToDatabaseManagerPoints() {
   outputManagerPoints()
   const sheet = CONSTANTS.speadsheetControlPanel.getSheetByName('Team manager Points For Database')
-  const statement = 'INSERT INTO game_extras (cutoff_id, short_uid, points, name, source) VALUES (?,?,?,?,?)'
+  const statement = 'REPLACE INTO game_extras (cutoff_id, short_uid, points, name, source) VALUES (?,?,?,?,?)'
   uploadToDatabase(sheet, statement)
+  Browser.msgBox('Очки для менеджеров команд загружены в БД')
 }

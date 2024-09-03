@@ -7,8 +7,8 @@ function doPost(e) {
 }
 
 function sendJson(json) {
-  // const url = 'https://docusketch.shop/wp-json/ds-shop/record-gamification-data/' // docusketchShop
-  const url = 'https://sandbox3.docusketch.shop/wp-json/ds-shop/record-gamification-data/' // sandbox3
+  const url = 'https://docusketch.shop/wp-json/ds-shop/record-gamification-data/' // docusketchShop
+  // const url = 'https://sandbox3.docusketch.shop/wp-json/ds-shop/record-gamification-data/' // sandbox3
 
   Logger.log('fetching data now...');
 
@@ -29,12 +29,18 @@ function sendJson(json) {
 
     if (responseCode >= 200 && responseCode < 300) {
       let data = JSON.parse(responseBody)
-      if (!ata.status != 'success') {
+      if (!data.status == 'success') {
         Logger.log('API call failed');
+      }
+      else {
+        CONSTANTS.speadsheetControlPanel.getSheetByName('draw').clear()
+        CONSTANTS.speadsheetControlPanel.getSheetByName('review').clear()
+        Browser.msgBox('Метрики посчитаны и загружены в БД')
       }
     } else {
       throw new Error('Not ok ' + responseBody);
     }
+
   } catch (error) {
     Logger.log('There has been a problem with your fetch operation: ' + error)
   }
