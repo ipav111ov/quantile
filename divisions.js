@@ -15,7 +15,9 @@ function getPlayingTeams() {
 function modifyDivisions(array) {
   const playingTeams = getPlayingTeams()
   array = array.slice(1)
-  const arrayForWrite = [['long_uid', 'leader_name', 'period', 'avg_points', 'division', 'place', 'previous_place', 'difference', 'is_playing']]
+  const header = ['long_uid', 'leader_name', 'cutoff_id', 'avg_points', 'division', 'place', 'previous_place', 'difference', 'division_place', 'division_previous_place', 'division_difference', 'is_playing']
+  const arrayForWrite = []
+  const arrayForWriteFinal = []
   const indexes = {
     longUid: 0,
     leaderName: 1,
@@ -25,7 +27,10 @@ function modifyDivisions(array) {
     place: 5,
     previousPlace: 6,
     difference: 7,
-    isPlaying: 8,
+    divisionPlace: 8,
+    divisionPreviousPlace: 9,
+    divisionDifference: 10,
+    isPlaying: 11,
   }
   const notPlayingTeams = []
   let place = 1
@@ -35,13 +40,49 @@ function modifyDivisions(array) {
     if (playingTeams[longUid]) {
       row[indexes.place] = place
       row[indexes.difference] = previousPlace - row[indexes.place]
-      row.push(1) // isPlaying
       arrayForWrite.push(row)
       place++
     }
     else {
       row[indexes.place] = -1
-      row[indexes.difference] = previousPlace - row[indexes.place]
+      row[indexes.difference] = 0
+
+      notPlayingTeams.push(row)
+    }
+  }
+  for (const row of notPlayingTeams) {
+    arrayForWrite.push(row)
+  }
+  const divisions = {}
+  for (const row of arrayForWrite) {
+    if (!divisions[row[indexes.division]]) {
+      divisions[row[indexes.division]] = []
+    }
+    divisions[row[indexes.division]].push(row)
+  }
+  for (const division in divisions) {
+    arrayForWriteFinal.push(modifyPlaces(divisions[division], playingTeams, indexes))
+  }
+  return arrayForWriteFinal.flat(1)
+}
+function modifyPlaces(array, playingTeams, indexes) {
+  const arrayForWrite = []
+  const notPlayingTeams = []
+  let place = 1
+  for (const row of array) {
+    const longUid = row[indexes.longUid]
+    const previousPlace = row[indexes.divisionPreviousPlace]
+    if (playingTeams[longUid]) {
+      row[indexes.divisionPlace] = place
+      row[indexes.division_difference] = previousPlace - row[indexes.divisionPlace]
+      row.push(1) // isPlaying}
+      arrayForWrite.push(row)
+      place++
+    }
+    else {
+      row[indexes.place] = -1
+      row[indexes.difference] = 0
+
       row.push(0) // isPlaying
       notPlayingTeams.push(row)
     }
@@ -60,7 +101,7 @@ function getDivisions() {
   if (!current_period || !previous_period) {
     Browser.msgBox("Выбирите cutoff")
   }
-  const arrayForWrite = [['long_uid', 'leader_name', 'period', 'avg_points', 'division', 'place', 'previous_place', 'difference']]
+  const arrayForWrite = [['long_uid', 'leader_name', 'cutoff_id', 'avg_points', 'division', 'place', 'previous_place', 'difference', 'division_place', 'division_previous_place', 'division_difference']]
   try {
     connection = connectToSql()
     connection.setAutoCommit(false)
@@ -78,7 +119,10 @@ function getDivisions() {
       const place = result.getInt('place')
       const previous_place = result.getInt('previous_place')
       const difference = result.getInt('difference')
-      arrayForWrite.push([long_uid, leader_name, period_id, avg_points, division, place, previous_place, difference])
+      const division_place = result.getInt('division_place')
+      const division_previous_place = result.getInt('division_previous_place')
+      const division_difference = result.getInt('division_difference')
+      arrayForWrite.push([long_uid, leader_name, period_id, avg_points, division, place, previous_place, difference, division_place, division_previous_place, division_difference])
     }
 
     stmt.close()
