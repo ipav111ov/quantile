@@ -33,8 +33,6 @@ function sendJson(json) {
         Logger.log('API call failed');
       }
       else {
-        CONSTANTS.speadsheetControlPanel.getSheetByName('draw').clear()
-        CONSTANTS.speadsheetControlPanel.getSheetByName('review').clear()
         Browser.msgBox('Метрики посчитаны и загружены в БД')
       }
     } else {

@@ -27,8 +27,8 @@ function createTeams() {
       continue
     };
     if (row[columns.leaderUid]) {
-      const leaderUid = row[columns.leaderUid]
-      currentLeaderUid = leaderUid.trim();
+      const leaderUid = row[columns.leaderUid].trim()
+      currentLeaderUid = leaderUid
       teams[currentLeaderUid] = {
         leaderUid: currentLeaderUid,
         leaderName: row[columns.leaderName],
@@ -44,6 +44,7 @@ function createTeams() {
         name: row[columns.memberName],
         shortUid: AnotherFunctions.getShortUid(memberUid),
         longUid: memberUid,
+        email: membersEmails[AnotherFunctions.getShortUid(memberUid)]
       }
     }
   }
@@ -53,26 +54,39 @@ function createTeams() {
 function prepareTeamsForDatabase() {
   const teams = createTeams()
   const arrayForWrite = [['memberShortUid', 'managerUid', 'managerRole', 'teamUid', 'division', 'leaderName', 'managerEmail']]
+  const emblems = getEmblems()
   for (const teamAsLeaderUid in teams) {
-    const leaderShortUid = AnotherFunctions.getShortUid(teams[teamAsLeaderUid].leaderUid)
-    const assistShortUid = AnotherFunctions.getShortUid(teams[teamAsLeaderUid].assistUid)
-    const managerArray = [leaderShortUid, assistShortUid]
+    const leaderUid = teams[teamAsLeaderUid].leaderUid
+    const assistUid = teams[teamAsLeaderUid].assistUid
+    const managerArray = [leaderUid, assistUid]
     for (const manager of managerArray) {
       if (manager) {
         for (const memberAsObject in teams[teamAsLeaderUid].members) {
           const memberShortUid = teams[teamAsLeaderUid].members[memberAsObject].shortUid
-          const managerUid = manager
-          const managerRole = manager === leaderShortUid ? 'leader' : 'assist'
-          const teamUid = leaderShortUid
-          const managerEmail = membersEmails[managerUid]
+          const managerUid = AnotherFunctions.getShortUid(manager)
+          const managerRole = manager === leaderUid ? 'leader' : 'assist'
+          const teamUid = AnotherFunctions.getShortUid(leaderUid)
+          const managerEmail = teams[teamAsLeaderUid].members[manager].email
           const division = teams[teamAsLeaderUid].division
           const leaderName = teams[teamAsLeaderUid].leaderName
+          const emblemLink = emblems[leaderUid]
           arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid, leaderName, division, managerEmail])
         }
       }
     }
   }
   return arrayForWrite
+}
+
+function getEmblems() {
+  const sheetName = 'TeamsForDatabase'
+  const ss = CONSTANTS.speadsheetControlPanel
+  const values = ss.getSheetByName(sheetName).getDataRange().getValues().slice(1)
+  const emblems = {}
+  for(const row of values){
+    emblems[row[0]] = row[1]
+  }
+  return emblems
 }
 
 function outputTeams() {

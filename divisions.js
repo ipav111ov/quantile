@@ -15,9 +15,8 @@ function getPlayingTeams() {
 function modifyDivisions(array) {
   const playingTeams = getPlayingTeams()
   array = array.slice(1)
-  const header = ['long_uid', 'leader_name', 'cutoff_id', 'avg_points', 'division', 'place', 'previous_place', 'difference', 'division_place', 'division_previous_place', 'division_difference', 'is_playing']
-  const arrayForWrite = []
-  const arrayForWriteFinal = []
+  let arrayForWrite = []
+  const header = [['long_uid', 'leader_name', 'cutoff_id', 'avg_points', 'division', 'place', 'previous_place', 'difference', 'division_place', 'division_previous_place', 'division_difference', 'is_playing']]
   const indexes = {
     longUid: 0,
     leaderName: 1,
@@ -32,58 +31,54 @@ function modifyDivisions(array) {
     divisionDifference: 10,
     isPlaying: 11,
   }
-  const notPlayingTeams = []
-  let place = 1
-  for (const row of array) {
-    const longUid = row[indexes.longUid]
-    const previousPlace = row[indexes.previousPlace]
-    if (playingTeams[longUid]) {
-      row[indexes.place] = place
-      row[indexes.difference] = previousPlace - row[indexes.place]
-      arrayForWrite.push(row)
-      place++
-    }
-    else {
-      row[indexes.place] = -1
-      row[indexes.difference] = 0
-
-      notPlayingTeams.push(row)
-    }
-  }
-  for (const row of notPlayingTeams) {
-    arrayForWrite.push(row)
-  }
+  array = modifyPlaces(array, playingTeams, indexes, 'generalRank')
   const divisions = {}
-  for (const row of arrayForWrite) {
+  for (const row of array) {
     if (!divisions[row[indexes.division]]) {
       divisions[row[indexes.division]] = []
     }
     divisions[row[indexes.division]].push(row)
   }
   for (const division in divisions) {
-    arrayForWriteFinal.push(modifyPlaces(divisions[division], playingTeams, indexes))
+    arrayForWrite.push(modifyPlaces(divisions[division], playingTeams, indexes, ''))
   }
-  return arrayForWriteFinal.flat(1)
+  arrayForWrite = arrayForWrite.flat(1)
+  const arrayForWriteFinal = [...header, ...arrayForWrite]
+  return arrayForWriteFinal
 }
-function modifyPlaces(array, playingTeams, indexes) {
+
+function modifyPlaces(array, playingTeams, indexes, generalRank) {
+  let indexPlace, indexPreviousPlace, indexDifference
+  if (generalRank) {
+    indexPlace = indexes.place
+    indexPreviousPlace = indexes.previousPlace
+    indexDifference = indexes.difference
+  }
+  else {
+    indexPlace = indexes.divisionPlace
+    indexPreviousPlace = indexes.divisionPreviousPlace
+    indexDifference = indexes.divisionDifference
+  }
   const arrayForWrite = []
   const notPlayingTeams = []
   let place = 1
   for (const row of array) {
     const longUid = row[indexes.longUid]
-    const previousPlace = row[indexes.divisionPreviousPlace]
     if (playingTeams[longUid]) {
-      row[indexes.divisionPlace] = place
-      row[indexes.division_difference] = previousPlace - row[indexes.divisionPlace]
-      row.push(1) // isPlaying}
+      row[indexPlace] = place
+      row[indexDifference] = row[indexPreviousPlace] ? row[indexPreviousPlace] - row[indexPlace] : 0
+      if (!generalRank) {
+        row.push(1) // isPlaying
+      }
       arrayForWrite.push(row)
       place++
     }
     else {
-      row[indexes.place] = -1
-      row[indexes.difference] = 0
-
-      row.push(0) // isPlaying
+      row[indexPlace] = -1
+      row[indexDifference] = 0
+      if (!generalRank) {
+        row.push(0) // isPlaying
+      }
       notPlayingTeams.push(row)
     }
   }
