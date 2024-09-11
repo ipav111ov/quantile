@@ -7,7 +7,7 @@ function createTeams() {
   for (const row of valuesMembers) {
     membersEmails[row[0]] = row[2]
   }
-
+  const emblems = getEmblemsAsObject()
   const columns = {
     leaderName: 0,
     leaderUid: 1,
@@ -36,6 +36,7 @@ function createTeams() {
         assistName: row[columns.assistName],
         members: {},
         division: row[columns.divisionName],
+        emblemLink: emblems[currentLeaderUid]
       }
     };
     if (row[columns.memberUid]) {
@@ -53,8 +54,7 @@ function createTeams() {
 
 function prepareTeamsForDatabase() {
   const teams = createTeams()
-  const arrayForWrite = [['memberShortUid', 'managerUid', 'managerRole', 'teamUid', 'division', 'leaderName', 'managerEmail']]
-  const emblems = getEmblems()
+  const arrayForWrite = [['memberShortUid', 'managerUid', 'managerRole', 'teamUid', 'division', 'leaderName', 'managerEmail', 'emblemLink']]
   for (const teamAsLeaderUid in teams) {
     const leaderUid = teams[teamAsLeaderUid].leaderUid
     const assistUid = teams[teamAsLeaderUid].assistUid
@@ -69,8 +69,8 @@ function prepareTeamsForDatabase() {
           const managerEmail = teams[teamAsLeaderUid].members[manager].email
           const division = teams[teamAsLeaderUid].division
           const leaderName = teams[teamAsLeaderUid].leaderName
-          const emblemLink = emblems[leaderUid]
-          arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid, leaderName, division, managerEmail])
+          const emblemLink = teams[teamAsLeaderUid].emblemLink
+          arrayForWrite.push([memberShortUid, managerUid, managerRole, teamUid, leaderName, division, managerEmail, emblemLink])
         }
       }
     }
@@ -99,7 +99,7 @@ function outputTeams() {
 function uploadToDatabaseTeams() {
   Logger.log('Uploading teams to database...')
   const sheet = CONSTANTS.speadsheetControlPanel.getSheetByName('TeamsForDatabase')
-  const statement = 'REPLACE INTO game_teams (member_short_uid, manager_short_uid, manager_role, team_uid,leader_name,division, manager_email) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  const statement = 'REPLACE INTO game_teams (member_short_uid, manager_short_uid, manager_role, team_uid,leader_name,division, manager_email, emblem_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   uploadToDatabase(sheet, statement)
   Logger.log('Teams uploaded')
 }

@@ -1,10 +1,4 @@
 const CONSTANTS = {
-  spreadsheet: SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/12QeL_19UjhEXXJZv5aNhO4km3gzT4WQZlTKsN6NpZ5I/edit?gid=1913073617#gid=1913073617'),
-
-  spredsheetTeams: SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1bNNxTlfZbEwcz26y_In32__5kEE67Vibq5Vp4DIVfjc/edit?gid=550950070#gid=550950070'),
-
-  spreadsheetMembers: SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1xclRts3VlBRplyyr855yhqwntD-OEwOfqmjg6cscjg8/edit?gid=296050003#gid=296050003'),
-
   speadsheetControlPanel : SpreadsheetApp.openByUrl('https://docs.google.com/spreadsheets/d/1lzcIm1Y0anh3YQZLToeEzp6S9qJhSWSuCtb9jvfwUH4/edit?gid=1546049928#gid=1546049928'),
 
   fp: "DRAWING",

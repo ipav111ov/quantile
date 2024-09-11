@@ -45,9 +45,9 @@ function getCutoffsFromDatabase() {
   const arrayForWrite = []
   const now = moment().valueOf()
   try {
-    connection = connectToSql();
-    connection.setAutoCommit(false);
-    const stmt = connection.prepareStatement(`SELECT * FROM game_cutoffs WHERE timestamp <= ${now} ORDER BY id DESC;`)
+    connection = connectToSql()
+    // connection.setAutoCommit(false);
+    const stmt = connection.prepareStatement(`SELECT * FROM game_cutoffs WHERE timestamp <= ${now} ORDER BY id DESC LIMIT 3;`)
 
     const result = stmt.executeQuery()
     while (result.next()) {
@@ -56,15 +56,15 @@ function getCutoffsFromDatabase() {
       const name = result.getString('name')
       arrayForWrite.push([name, id, timestamp])
     }
-    stmt.close()
-    connection.commit()
+    // stmt.close()
+    // connection.commit()
     Logger.log('Cutoffs recieved')
     return arrayForWrite
   }
   catch (e) {
-    if (connection) {
-      connection.rollback()
-    }
+    // if (connection) {
+    //   connection.rollback()
+    // }
     Logger.log('Error: ' + e.message)
   }
   finally {

@@ -45,5 +45,3 @@ function uploadToDatabaseMembers() {
   Logger.log('Members uploaded')
 }
 
-
-

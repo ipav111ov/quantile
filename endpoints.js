@@ -6,10 +6,7 @@ function doPost(e) {
 
 }
 
-function sendJson(json) {
-  const url = 'https://docusketch.shop/wp-json/ds-shop/record-gamification-data/' // docusketchShop
-  // const url = 'https://sandbox3.docusketch.shop/wp-json/ds-shop/record-gamification-data/' // sandbox3
-
+function sendJson(json, url) {
   Logger.log('fetching data now...');
 
   const key = PropertiesService.getScriptProperties().getProperty('key')
@@ -171,4 +168,22 @@ function pasteToSheet(arrayForWrite, sheetName, spreadsheet) {
   const sheet = spreadsheet.getSheetByName(sheetName)
   sheet.clear()
   sheet.getRange(1, 1, arrayForWrite.length, arrayForWrite[0].length).setValues(arrayForWrite)
+}
+
+function deleteFromDatabase(query) {
+  let connection
+  try {
+    connection = connectToSql()
+    const statement = connection.prepareStatement(query)
+    statement.executeQuery()
+    Logger.log('Data deleted')
+  }
+  catch (e) {
+    Logger.log('Error - ' + e.message)
+  }
+  finally {
+    if (connection) {
+      connetction.close
+    }
+  }
 }

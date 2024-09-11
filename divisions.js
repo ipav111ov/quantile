@@ -12,6 +12,7 @@ function getPlayingTeams() {
 }
 
 
+
 function modifyDivisions(array) {
   const playingTeams = getPlayingTeams()
   array = array.slice(1)
@@ -91,49 +92,51 @@ function modifyPlaces(array, playingTeams, indexes, generalRank) {
 function getDivisions() {
   Logger.log('Creating divisions...')
   let connection
-  const current_period = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D6').getValue()
-  const previous_period = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D21').getValue()
-  if (!current_period || !previous_period) {
+  const currentCutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D6').getValue()
+  const previousCutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D21').getValue()
+  if (!currentCutoffId || !previousCutoffId) {
     Browser.msgBox("Выбирите cutoff")
   }
-  const arrayForWrite = [['long_uid', 'leader_name', 'cutoff_id', 'avg_points', 'division', 'place', 'previous_place', 'difference', 'division_place', 'division_previous_place', 'division_difference']]
-  try {
-    connection = connectToSql()
-    connection.setAutoCommit(false)
-    const stmt = connection.prepareStatement(`CALL getDivisions(?,?)`)
-    stmt.setInt(1, current_period)
-    stmt.setInt(2, previous_period)
+  else {
+    const arrayForWrite = [['long_uid', 'leader_name', 'cutoff_id', 'avg_points', 'division', 'place', 'previous_place', 'difference', 'division_place', 'division_previous_place', 'division_difference']]
+    try {
+      connection = connectToSql()
+      connection.setAutoCommit(false)
+      const stmt = connection.prepareStatement(`CALL getDivisions(?,?)`)
+      stmt.setInt(1, currentCutoffId)
+      stmt.setInt(2, previousCutoffId)
 
-    const result = stmt.executeQuery()
-    while (result.next()) {
-      const long_uid = result.getString('long_uid')
-      const leader_name = result.getString('leader_name')
-      const period_id = result.getInt('period')
-      const avg_points = result.getDouble('average_points')
-      const division = result.getString('division')
-      const place = result.getInt('place')
-      const previous_place = result.getInt('previous_place')
-      const difference = result.getInt('difference')
-      const division_place = result.getInt('division_place')
-      const division_previous_place = result.getInt('division_previous_place')
-      const division_difference = result.getInt('division_difference')
-      arrayForWrite.push([long_uid, leader_name, period_id, avg_points, division, place, previous_place, difference, division_place, division_previous_place, division_difference])
-    }
+      const result = stmt.executeQuery()
+      while (result.next()) {
+        const long_uid = result.getString('long_uid')
+        const leader_name = result.getString('leader_name')
+        const period_id = result.getInt('period')
+        const avg_points = result.getDouble('average_points')
+        const division = result.getString('division')
+        const place = result.getInt('place')
+        const previous_place = result.getInt('previous_place')
+        const difference = result.getInt('difference')
+        const division_place = result.getInt('division_place')
+        const division_previous_place = result.getInt('division_previous_place')
+        const division_difference = result.getInt('division_difference')
+        arrayForWrite.push([long_uid, leader_name, period_id, avg_points, division, place, previous_place, difference, division_place, division_previous_place, division_difference])
+      }
 
-    stmt.close()
-    connection.commit()
-    Logger.log('Divisions created')
-    return arrayForWrite
-  }
-  catch (e) {
-    if (connection) {
-      connection.rollback()
+      stmt.close()
+      connection.commit()
+      Logger.log('Divisions created')
+      return arrayForWrite
     }
-    Logger.log('Error: ' + e.message)
-  }
-  finally {
-    if (connection) {
-      connection.close()
+    catch (e) {
+      if (connection) {
+        connection.rollback()
+      }
+      Logger.log('Error: ' + e.message)
+    }
+    finally {
+      if (connection) {
+        connection.close()
+      }
     }
   }
 }
@@ -148,8 +151,17 @@ function outputDivisions() {
 
 function uploadToDatabaseDivisions() {
   Logger.log('Uploading divisions...')
-  const statement = 'REPLACE INTO game_divisions (long_uid, leader_name, cutoff_id, average_points,division, place, previous_place, difference, is_playing) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  const statement = 'REPLACE INTO game_divisions (long_uid, leader_name, cutoff_id, average_points, division, place, previous_place, difference, division_place, division_previous_place, division_difference, is_playing) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)'
   uploadToDatabase(divisionsSheet, statement)
   Logger.log('Divisions Uploaded')
   Browser.msgBox('Дивизионы загружены в БД')
+}
+
+
+function deleteDivisionsForCutoff() {
+  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D6').getValue()
+  const table = 'game_divisions'
+  const query = `DELETE FROM ${table} WHERE cutoff_id = ${cutoffId};`
+  deleteFromDatabase(query)
+  Browser.msgBox('Дивизионая таблица за выбранный катофф удалена из БД')
 }

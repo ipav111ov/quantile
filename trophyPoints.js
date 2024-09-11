@@ -46,8 +46,8 @@ function createTrophyPointsForDatabase() {
         for (const memberAsObject in teams[teamAsLeaderUid].members) {
           const memberShortUid = teams[teamAsLeaderUid].members[memberAsObject].shortUid
           const points = trophyPoints[teamAsLeaderUid] || 0
-          const name = 'next playoff'
-          const source = 'trophy points'
+          const name = 'Points for next play-off'
+          const source = 'Trophy points Control Panel'
           arrayForWrite.push([cutoffId, memberShortUid, points, name, source])
         }
       }

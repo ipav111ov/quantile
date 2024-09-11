@@ -31,8 +31,8 @@ function getManagerPoints() {
         const points = manager === leaderShortUid ?
           divisions[leaderShortUid].points * leaderCoof :
           divisions[leaderShortUid].points * assistCoof
-        const name = manager === leaderShortUid ? 'leader bonus' : 'assist bonus'
-        const source = 'team manager points'
+        const name = manager === leaderShortUid ? 'Leader Bonus' : 'Assist Bonus'
+        const source = 'Team manager points Control Panel'
         arrayForWrite.push([cutoffId, manager, points, name, source])
       }
     }

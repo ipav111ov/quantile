@@ -7,7 +7,9 @@ function calculatePoints() {
     const gamification = new Gamification(CONSTANTS.speadsheetControlPanel, time)
     const output = new Output(gamification, time)
     output.programs
-    sendJson(gamification.json)
+    const url = 'https://docusketch.shop/wp-json/ds-shop/record-gamification-data/' // docusketchShop
+    // const url = 'https://sandbox3.docusketch.shop/wp-json/ds-shop/record-gamification-data/' // sandbox3
+    sendJson(gamification.json, url)
     Logger.log('Points calculated')
   }
   else {
@@ -172,7 +174,7 @@ class Gamification {
     const isExclude = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getRange('A2').getValue()
     if (isExclude) {
       const excludedUidObject = {}
-      const valuesExcludedUid = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getDataRange().getValues().slice(3).flat(1)
+      const valuesExcludedUid = CONSTANTS.speadsheetControlPanel.getSheetByName('excludedUid').getDataRange().getValues().slice(2).flat(1)
       for (const uid of valuesExcludedUid) {
         excludedUidObject[uid] = true
       }
@@ -548,3 +550,14 @@ class Member {
     this[CONSTANTS.esx] = Factories.factoryNormalBig();
   };
 };
+
+function deleteDrawingReviewForCutoff() {
+  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D6').getValue()
+  const tableDrawing = 'game_drawing'
+  const tableReview = 'game_review'
+  const queryDrawing = `DELETE FROM ${tableDrawing} WHERE cutoff_id = ${cutoffId};`
+  deleteFromDatabase(queryDrawing)
+  const queryReview = `DELETE FROM ${tableReview} WHERE cutoff_id = ${cutoffId};`
+  deleteFromDatabase(queryReview)
+  Browser.msgBox('Метрики за выбранный катофф удалены из БД')
+}
