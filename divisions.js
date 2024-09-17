@@ -155,6 +155,7 @@ function uploadToDatabaseDivisions() {
   uploadToDatabase(divisionsSheet, statement)
   Logger.log('Divisions Uploaded')
   Browser.msgBox('Дивизионы загружены в БД')
+  outputDivisions()
 }
 
 

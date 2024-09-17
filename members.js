@@ -43,5 +43,6 @@ function uploadToDatabaseMembers() {
   const membersSheet = CONSTANTS.speadsheetControlPanel.getSheetByName('membersForDatabase')
   uploadToDatabase(membersSheet, statement)
   Logger.log('Members uploaded')
+  outputMembers()
 }
 

@@ -2,7 +2,7 @@ function getEmblemLinks() {
   const folder = DriveApp.getFolderById('1_g-bksnrpg-BoVAqpAYabWR1-tv2G7tZ')
   const files = folder.getFiles()
   const arrayForWrite = [['uid', 'link']]
-  const template = `https://drive.google.com/uc?id=`
+  const template = `https://drive.google.com/thumbnail?id=`
   const ext = '.png'
   while (files.hasNext()) {
     const file = files.next()

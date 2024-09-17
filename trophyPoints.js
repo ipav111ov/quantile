@@ -1,4 +1,4 @@
-function createLeaderList() {
+function createPlayingLeadersList() {
   const values = CONSTANTS.speadsheetControlPanel.getSheetByName('Playing Teams').getDataRange().getValues().slice(1)
   const arrayForWrite = [['leader', 'leader name', 'points']]
 
@@ -11,8 +11,8 @@ function createLeaderList() {
   return arrayForWrite
 }
 
-function outputLeaderList() {
-  const arrayForWrite = createLeaderList()
+function outputPlayingLeadersList() {
+  const arrayForWrite = createPlayingLeadersList()
   const sheetName = 'Trophy Points'
   const ss = CONSTANTS.speadsheetControlPanel
   pasteToSheet(arrayForWrite, sheetName, ss)
@@ -72,4 +72,13 @@ function uploadToDatabaseTrophyPoints() {
   const statement = 'REPLACE INTO game_extras (cutoff_id, short_uid, points, name, source) VALUES (?,?,?,?,?)'
   uploadToDatabase(sheet, statement)
   Browser.msgBox('Trophy Очки загружены в БД')
+  outputTrophyPoints()
+}
+
+function deleteLeaderPointsForCutoff() {
+  const cutoffId = CONSTANTS.speadsheetControlPanel.getSheetByName('main').getRange('D33').getValue()
+  const table = 'game_extras'
+  const query = `DELETE FROM ${table} WHERE cutoff_id = ${cutoffId} AND source = Trophy points Control Panel;`
+  deleteFromDatabase(query)
+  Browser.msgBox('Trophy очки за выбранный катофф удалены из БД')
 }

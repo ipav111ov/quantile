@@ -83,7 +83,7 @@ function getEmblems() {
   const ss = CONSTANTS.speadsheetControlPanel
   const values = ss.getSheetByName(sheetName).getDataRange().getValues().slice(1)
   const emblems = {}
-  for(const row of values){
+  for (const row of values) {
     emblems[row[0]] = row[1]
   }
   return emblems
@@ -98,8 +98,28 @@ function outputTeams() {
 
 function uploadToDatabaseTeams() {
   Logger.log('Uploading teams to database...')
+  outputTeams()
   const sheet = CONSTANTS.speadsheetControlPanel.getSheetByName('TeamsForDatabase')
   const statement = 'REPLACE INTO game_teams (member_short_uid, manager_short_uid, manager_role, team_uid,leader_name,division, manager_email, emblem_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   uploadToDatabase(sheet, statement)
   Logger.log('Teams uploaded')
+  outputTeams()
+}
+
+function createLeadersList() {
+  const teams = createTeams()
+  const arrayForWrite = [['leaderUid', 'leaderName']]
+  for (const teamAsLeaderUid in teams) {
+    const leaderUid = teams[teamAsLeaderUid].leaderUid
+    const leaderName = teams[teamAsLeaderUid].leaderName
+    arrayForWrite.push([leaderUid, leaderName])
+  }
+  return arrayForWrite
+}
+
+function outputLeadersList() {
+  const arrayForWrite = createLeadersList()
+  const sheetName = 'Шаблон команд'
+  const ss = CONSTANTS.speadsheetControlPanel
+  pasteToSheet(arrayForWrite, sheetName, ss)
 }

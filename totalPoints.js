@@ -6,7 +6,7 @@ function getTotalPointsForCutoffFromDatabase() {
     Browser.msgBox("Выбирите cutoff")
   }
   else {
-    const arrayForWrite = [['email', 'points', 'cutoff_id']]
+    const arrayForWrite = [['email', 'points', 'details']]
     try {
       connection = connectToSql()
       // connection.setAutoCommit(false)
@@ -18,7 +18,8 @@ function getTotalPointsForCutoffFromDatabase() {
         const email = result.getString('email')
         const points = result.getFloat('total_points')
         const cutoffId = result.getInt('cutoff_id')
-        arrayForWrite.push([email, points, cutoffId])
+        const name = result.getString('name')
+        arrayForWrite.push([email, points,name])
       }
 
       // stmt.close()
@@ -48,6 +49,7 @@ function modifyTotalPointsForCutoff(array) {
   }
   return arrayForWrite
 }
+
 function sendJsonTotalPointsForCutoff() {
   const values = CONSTANTS.speadsheetControlPanel.getSheetByName('Total Points').getDataRange().getValues().slice(1)
   const arrayForWrite = []
@@ -67,7 +69,6 @@ function sendJsonTotalPointsForCutoff() {
 
 function outputTotalPointsForCutoff() {
   let arrayForWrite = getTotalPointsForCutoffFromDatabase()
-  arrayForWrite = modifyTotalPointsForCutoff(arrayForWrite)
   const sheetName = 'Total Points'
   const ss = CONSTANTS.speadsheetControlPanel
   pasteToSheet(arrayForWrite, sheetName, ss)
