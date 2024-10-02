@@ -47,7 +47,9 @@ function getCutoffsFromDatabase() {
   try {
     connection = connectToSql()
     // connection.setAutoCommit(false);
-    const stmt = connection.prepareStatement(`SELECT * FROM game_cutoffs WHERE timestamp <= ${now} ORDER BY id DESC LIMIT 3;`)
+    // const stmt = connection.prepareStatement(`SELECT * FROM game_cutoffs WHERE timestamp <= ${now} ORDER BY id DESC LIMIT 3;`)
+    
+    const stmt = connection.prepareStatement(`SELECT * FROM game_cutoffs ORDER BY id DESC;`)
 
     const result = stmt.executeQuery()
     while (result.next()) {

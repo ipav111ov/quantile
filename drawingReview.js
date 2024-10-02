@@ -321,12 +321,16 @@ class Gamification {
       return obj
     }
 
-    const sheetWeights = this.spreadsheet.getSheetByName('weights')
-    const reviewWeights = sheetWeights.getRange('A1:E5').getValues().slice(1)
-    const drawWeights = sheetWeights.getRange('A7:F12').getValues().slice(1)
+    const sheetWeights = this.spreadsheet.getSheetByName('weights2')
+    // const reviewWeights = sheetWeights.getRange('A1:E5').getValues().slice(1)
+    const reviewWeights = sheetWeights.getRange('A1:E5').getValues()
+    // const drawWeights = sheetWeights.getRange('A7:F12').getValues().slice(1)
+    const drawWeights = sheetWeights.getRange('A7:F12').getValues()
+    // Logger.log(reviewWeights)
+    // Logger.log(drawWeights)
     let obj = {
-      review: reviewObj(reviewWeights),
-      draw: drawObj(drawWeights),
+      review: reviewObj(reviewWeights.slice(1)),
+      draw: drawObj(drawWeights.slice(1)),
     }
     return obj
   }

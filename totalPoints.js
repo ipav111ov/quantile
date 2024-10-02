@@ -50,8 +50,7 @@ function modifyTotalPointsForCutoff(array) {
   return arrayForWrite
 }
 
-function sendJsonTotalPointsForCutoff() {
-  const values = CONSTANTS.speadsheetControlPanel.getSheetByName('Total Points').getDataRange().getValues().slice(1)
+function sendJsonTotalPointsForCutoff(values) {
   const arrayForWrite = []
   for (const row of values) {
     const obj = {
@@ -66,6 +65,23 @@ function sendJsonTotalPointsForCutoff() {
   sendJson(json, url)
   Logger.log('json sended')
 }
+
+// function sendJsonTotalPointsForCutoff() {
+//   const values = CONSTANTS.speadsheetControlPanel.getSheetByName('Total Points').getDataRange().getValues().slice(1)
+//   const arrayForWrite = []
+//   for (const row of values) {
+//     const obj = {
+//       email: row[0],
+//       points: row[1],
+//       details: row[3]
+//     }
+//     arrayForWrite.push(obj)
+//   }
+//   const json = JSON.stringify(arrayForWrite)
+//   const url = 'https://docusketch.shop/wp-json/ds-shop/mass-credit/'
+//   sendJson(json, url)
+//   Logger.log('json sended')
+// }
 
 function outputTotalPointsForCutoff() {
   let arrayForWrite = getTotalPointsForCutoffFromDatabase()
