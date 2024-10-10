@@ -40,15 +40,6 @@ function getTotalPointsForCutoffFromDatabase() {
     }
   }
 }
-function modifyTotalPointsForCutoff(array) {
-  const arrayForWrite = [['email', 'points', 'cutoff_id', 'details']]
-  for (let i = 1; i < array.length; i++) {
-    array[i].push('some details')
-    const row = array[i]
-    arrayForWrite.push(row)
-  }
-  return arrayForWrite
-}
 
 function sendJsonTotalPointsForCutoff(values) {
   const arrayForWrite = []
@@ -64,6 +55,55 @@ function sendJsonTotalPointsForCutoff(values) {
   const url = 'https://docusketch.shop/wp-json/ds-shop/mass-credit/'
   sendJson(json, url)
   Logger.log('json sended')
+}
+function sendJsonByBatches() {
+  const batchSize = 1
+  const sheet = CONSTANTS.speadsheetControlPanel.getSheetByName('Total Points')
+  try {
+    const lastRowTotal = sheet.getLastRow();
+    const lastColumn = sheet.getLastColumn();
+    let dataIndex = 0;
+    Logger.log('Uploading data...')
+
+    while (dataIndex < lastRowTotal) {
+      let batchSizeCount = 0;
+
+      const currentLastRow = sheet.getLastRow()
+
+      let data;
+      if (currentLastRow >= batchSize) {
+        data = sheet.getRange((currentLastRow - batchSize) + 1, 1, batchSize, lastColumn).getValues();
+      } else {
+        data = sheet.getRange(2, 1, currentLastRow - 1, lastColumn).getValues();
+        Logger.log('Last batch')
+      }
+      const json = JSON.stringify(prepareJson(data.reverse()))
+      const url = 'https://docusketch.shop/wp-json/ds-shop/mass-credit/'
+      Logger.log("ready to send")
+
+      if (data.length >= batchSize) {
+        sheet.getRange((currentLastRow - batchSize) + 1, 1, batchSize, lastColumn).clear()
+      }
+      else {
+        sheet.getRange(2, 1, data.length, lastColumn).clear()
+      }
+      SpreadsheetApp.flush()
+      sendJson(json, url)
+      Logger.log("ok")
+
+      while (batchSizeCount <= batchSize && batchSizeCount < data.length) {
+        batchSizeCount++;
+        dataIndex++;
+      }
+      Logger.log(data.at(0))
+      Logger.log(data.at(-1))
+      Logger.log(`${dataIndex} rows uploaded to Database`)
+    }
+    Logger.log('Uploaded to Database');
+  }
+  catch (e) {
+    Logger.log('Error: ' + e.message);
+  }
 }
 
 // function sendJsonTotalPointsForCutoff() {

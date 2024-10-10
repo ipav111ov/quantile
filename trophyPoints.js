@@ -67,7 +67,6 @@ function outputTrophyPoints() {
 }
 
 function uploadToDatabaseTrophyPoints() {
-  outputTrophyPoints()
   const sheet = CONSTANTS.speadsheetControlPanel.getSheetByName('Trophy Points For Database')
   const statement = 'REPLACE INTO game_extras (cutoff_id, short_uid, points, name, source) VALUES (?,?,?,?,?)'
   uploadToDatabase(sheet, statement)
